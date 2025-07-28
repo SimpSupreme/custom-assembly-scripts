@@ -2,13 +2,12 @@ http.get("https://raw.githubusercontent.com/SimpSupreme/custom-assembly-scripts/
     loadstring(v)()
 end)
 
-local last_click_time = 0
 local workspace = globals.workspace()
 local screenSize = render.screen_size()
 local gameplayFolder = workspace:FindChild("GameplayFolder")
 local roomsFolder = gameplayFolder:FindChild("Rooms")
 local anglerFont = render.create_font("C:\\Windows\\Fonts\\Verdana.ttf", 33, "ab")
-local majorFileNames = {"AbstractFile", "LunarDockDocument", "ThePainterDocument"}
+local majorFileNames = {"AbstractFile", "LunarDockDocument", "ThePainterDocument", "StanDocument"}
 local fakeDoorNames = {"ServerTrickster", "TricksterRoom", "OutskirtsTrickster"}
 local itemNames = {"Flashlight", "RoomsBattery", "DefaultBattery3", "AltBattery3", "AltBattery2", "AltBattery1", "DefaultBattery1", "DefaultBattery2", "BigFlashBeacon", "Lantern", "SPRINT", "CodeBreacher", "ToyRemote", "BlueToyRemote", "Medkit", "HealthBoost", "WindupLight", "Gummylight"}
 local keycardNames = {"NormalKeyCard", "PasswordPaper", "InnerKeyCard", "RidgeKeyCard"}
@@ -17,6 +16,7 @@ local currencyNames = {"Blueprint", "Relic"}
 
 local warningsLabel = ui.label("Warnings")
 local anglerWarnToggle = ui.new_checkbox("Angler Warning")
+local wallDwellerWarnToggle = ui.new_checkbox("Wall Dweller Warning")
 local fakeDoorWarnToggle = ui.new_checkbox("Fake Door Warning")
 local voidLockerWarnToggle = ui.new_checkbox("Void Locker Warning")
 
@@ -301,7 +301,7 @@ local function highlightKeycards()
 end
 
 local function highlightMonsterLockers()
-        local now = globals.curtime()
+    local now = globals.curtime()
 
     if now - monsterLockerUpdate >= updateInterval then
         updateMonsterLockerCache()
@@ -319,7 +319,7 @@ local function highlightMonsterLockers()
 end
 
 local function highlightFakeDoors()
-        local now = globals.curtime()
+    local now = globals.curtime()
 
     if now - fakeDoorUpdate >= updateInterval then
         updateFakeDoorCache()
@@ -337,11 +337,11 @@ local function highlightFakeDoors()
 end
 
 local function highlightGenerators()
-        local now = globals.curtime()
+    local now = globals.curtime()
 
     if now - generatorUpdate >= updateInterval then
         updateGeneratorCache()
-        fakeDoorUpdate = now
+        generatorUpdate = now
     end
 
     if not globals.is_focused() then return end
@@ -364,9 +364,22 @@ local function anglerWarn()
     end
 end
 
+local function wallDwellerWarn()
+    if not globals.is_focused() then return end
+    local monstersFolder = workspace:FindChild("Monsters")
+    if not monstersFolder then return end
+    if monstersFolder:FindChild("DiVineRoot") then
+        render.text((screenSize.x/2 - 50), (screenSize.y - 210), "Wall Dweller", 255, 255, 255, 255, "", anglerFont)
+    end
+end
+
 cheat.set_callback("paint", function()
     if anglerWarnToggle:get() then
         anglerWarn()
+    end
+
+    if wallDwellerWarnToggle:get() then
+        wallDwellerWarn()
     end
 
     if fakeDoorWarnToggle:get() then
