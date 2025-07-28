@@ -28,12 +28,6 @@ local itemESPToggle = ui.new_checkbox("Item ESP")
 local keycardESPToggle = ui.new_checkbox("Keycard/Password ESP")
 local generatorESPToggle = ui.new_checkbox("Searchlight Generator ESP")
 
-local spacer2 = ui.label("")
-
-local autoLabel = ui.label("Automation")
-local autoShakeLabel = ui.label("Auto Shake Gummylight")
-local autoShakeKeybind = ui.keybind("Auto Shake")
-
 -- has to have multiple update timers, only money updates if it's all one. womp womp.
 local lastCurrencyUpdate = 0
 local lastItemUpdate = 0
@@ -397,14 +391,5 @@ cheat.set_callback("paint", function()
 
     if generatorESPToggle:get() then
         highlightGenerators()
-    end
-
-    if autoShakeKeybind:get() then
-        local clicked_time = globals.curtime()
-        if clicked_time - last_click_time >= 0.4 then
-            input.click()
-            last_click_time = clicked_time
-            print("clicked")
-        end
     end
 end)
