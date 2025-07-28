@@ -26,7 +26,8 @@ local highlightsLabel = ui.label("ESP/Highlights")
 local moneyESPToggle = ui.new_checkbox("Money ESP")
 local itemESPToggle = ui.new_checkbox("Item ESP")
 local keycardESPToggle = ui.new_checkbox("Keycard/Password ESP")
-local generatorESPToggle = ui.new_checkbox("Searchlight Generator ESP")
+local generatorESPToggle = ui.new_checkbox("Searchlight GE Generator ESP")
+local generatorESPToggle2 = ui.new_checkbox("Ending Searchlight Generator ESP")
 
 -- has to have multiple update timers, only money updates if it's all one. womp womp.
 local lastCurrencyUpdate = 0
@@ -35,6 +36,7 @@ local lastKeycardUpdate = 0
 local monsterLockerUpdate = 0
 local fakeDoorUpdate = 0
 local generatorUpdate = 0
+local generatorUpdate2 = 0
 local currencyCache = {}
 local itemPosCache = {}
 local itemNameCache = {}
@@ -42,6 +44,7 @@ local keycardCache = {}
 local monsterLockerCache = {}
 local fakeDoorCache = {}
 local generatorCache = {}
+local generatorCache2 = {}
 local updateInterval = 1
 
 local currencyNameSet = {}
@@ -216,7 +219,7 @@ local function generatorBrokenCheck(generatorModel)
     end
 end
 
-local function updateGeneratorCache()
+local function updateMidGeneratorCache()
     generatorCache = {} -- Clear previous data
 
     local encounterRoom = roomsFolder:FindChild("SearchlightsEncounter")
@@ -233,6 +236,32 @@ local function updateGeneratorCache()
                             local proxyPos = proxyPrim:GetPartPosition()
                             if proxyPos then
                                 table.insert(generatorCache, proxyPos)
+                            end
+                        end    
+                    end
+                end    
+            end
+        end
+    end
+end
+
+local function updateEndGeneratorCache()
+    generatorCache2 = {} -- Clear previous data
+
+    local encounterRoom = roomsFolder:FindChild("SearchlightsEnding")
+    if encounterRoom then
+        local encounterInteractables = encounterRoom:FindChild("Interactables")
+        if encounterInteractables then
+            for _, models in pairs(encounterInteractables:Children()) do
+                local modelName = models:Name()
+                if modelName == "PresetGenerator" and generatorBrokenCheck(models) then
+                    local proxyPart = models:FindChild("ProxyPart")
+                    if proxyPart then
+                        local proxyPrim = proxyPart:Primitive()
+                        if proxyPrim then
+                            local proxyPos = proxyPrim:GetPartPosition()
+                            if proxyPos then
+                                table.insert(generatorCache2, proxyPos)
                             end
                         end    
                     end
@@ -336,17 +365,35 @@ local function highlightFakeDoors()
     end
 end
 
-local function highlightGenerators()
+local function highlightMidGenerators()
     local now = globals.curtime()
 
     if now - generatorUpdate >= updateInterval then
-        updateGeneratorCache()
+        updateMidGeneratorCache()
         generatorUpdate = now
     end
 
     if not globals.is_focused() then return end
 
     for _, worldPos in pairs(generatorCache) do
+        local screenPos = utils.world_to_screen(worldPos)
+        if screenPos.x > 0 then
+            render.text(screenPos.x, screenPos.y, "Broken Generator", 225, 90, 90, 255, "", 0)
+        end
+    end
+end
+
+local function highlightEndGenerators()
+    local now = globals.curtime()
+
+    if now - generatorUpdate2 >= updateInterval then
+        updateEndGeneratorCache()
+        generatorUpdate2 = now
+    end
+
+    if not globals.is_focused() then return end
+
+    for _, worldPos in pairs(generatorCache2) do
         local screenPos = utils.world_to_screen(worldPos)
         if screenPos.x > 0 then
             render.text(screenPos.x, screenPos.y, "Broken Generator", 225, 90, 90, 255, "", 0)
@@ -403,6 +450,10 @@ cheat.set_callback("paint", function()
     end
 
     if generatorESPToggle:get() then
-        highlightGenerators()
+        highlightMidGenerators()
+    end
+
+    if generatorESPToggle2:get() then
+        highlightEndGenerators()
     end
 end)
