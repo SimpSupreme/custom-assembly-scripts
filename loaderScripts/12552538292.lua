@@ -2,6 +2,8 @@ http.get("https://raw.githubusercontent.com/SimpSupreme/custom-assembly-scripts/
     loadstring(v)()
 end)
 
+local datamodel = globals.data_model()
+local players = datamodel:FindChild("Players")
 local workspace = globals.workspace()
 local screenSize = render.screen_size()
 local gameplayFolder = workspace:FindChild("GameplayFolder")
@@ -10,6 +12,7 @@ local anglerFont = render.create_font("C:\\Windows\\Fonts\\Verdana.ttf", 33, "ab
 local majorFileNames = {"AbstractFile", "LunarDockDocument", "ThePainterDocument", "StanDocument"}
 local fakeDoorNames = {"ServerTrickster", "TricksterRoom", "OutskirtsTrickster"}
 local itemNames = {"Flashlight", "RoomsBattery", "DefaultBattery3", "AltBattery3", "AltBattery2", "AltBattery1", "DefaultBattery1", "DefaultBattery2", "BigFlashBeacon", "Lantern", "SPRINT", "CodeBreacher", "ToyRemote", "BlueToyRemote", "Medkit", "HealthBoost", "WindupLight", "Gummylight"}
+local itemNamesNoLights = {"RoomsBattery", "DefaultBattery3", "AltBattery3", "AltBattery2", "AltBattery1", "DefaultBattery1", "DefaultBattery2", "SPRINT", "CodeBreacher", "ToyRemote", "BlueToyRemote", "Medkit", "HealthBoost"}
 local keycardNames = {"NormalKeyCard", "PasswordPaper", "InnerKeyCard", "RidgeKeyCard"}
 local anglerVariants = {"Angler", "Blitz", "Froger", "Pinkie", "Chainsmoker", "Pandemonium", "RidgeAngler", "RidgeFroger", "RidgeBlitz", "RidgePinkie", "RidgeChainsmoker", "A60"}
 local currencyNames = {"Blueprint", "Relic"}
@@ -28,6 +31,12 @@ local itemESPToggle = ui.new_checkbox("Item ESP")
 local keycardESPToggle = ui.new_checkbox("Keycard/Password ESP")
 local generatorESPToggle = ui.new_checkbox("Searchlight GE Generator ESP")
 local generatorESPToggle2 = ui.new_checkbox("Ending Searchlight Generator ESP")
+
+local spacer2 = ui.label("")
+
+local helpersLabel = ui.label("Challenge Helpers")
+local WDITDToggle = ui.new_checkbox("We Die In The Dark")
+local CarefulToggle = ui.new_checkbox("Extra Careful")
 
 -- has to have multiple update timers, only money updates if it's all one. womp womp.
 local lastCurrencyUpdate = 0
@@ -117,6 +126,11 @@ for _, name in pairs(itemNames) do
     itemNameSet[name] = true
 end
 
+local noLightsNameSet = {}
+for _, name in pairs(itemNamesNoLights) do
+    noLightsNameSet[name] = true
+end
+
 local function updateItemCache()
     itemNameCache = {}
     itemPosCache = {}
@@ -129,13 +143,26 @@ local function updateItemCache()
                     for _, spawn in pairs(spawnLocationsFolder:Children()) do
                         local spawnModel = spawn:FindChildByClass("Model")
                         if spawnModel then
-                            if itemNameSet[spawnModel:Name()] then
-                                local prim = spawn:Primitive()
-                                if prim then
-                                    local worldPos = prim:GetPartPosition()
-                                    if worldPos then
-                                        table.insert(itemPosCache, worldPos)
-                                        table.insert(itemNameCache, spawnModel:Name())
+                            if WDITDToggle:get() then
+                                if noLightsNameSet[spawnModel:Name()] then
+                                    local prim = spawn:Primitive()
+                                    if prim then
+                                        local worldPos = prim:GetPartPosition()
+                                        if worldPos then
+                                            table.insert(itemPosCache, worldPos)
+                                            table.insert(itemNameCache, spawnModel:Name())
+                                        end
+                                    end
+                                end
+                            elseif not WDITDToggle:get() then
+                                if itemNameSet[spawnModel:Name()] then
+                                    local prim = spawn:Primitive()
+                                    if prim then
+                                        local worldPos = prim:GetPartPosition()
+                                        if worldPos then
+                                            table.insert(itemPosCache, worldPos)
+                                            table.insert(itemNameCache, spawnModel:Name())
+                                        end
                                     end
                                 end
                             end
@@ -420,6 +447,67 @@ local function wallDwellerWarn()
     end
 end
 
+local function WDITDCheck()
+    local player = players:FindChild(entity.localplayer():Name())
+    if not player then return end
+
+    local playerFolder = player:FindChild("PlayerFolder")
+    if not playerFolder then return end
+
+    local hadLightStore = playerFolder:FindChild("HadLightSource")
+    if not hadLightStore then return end
+
+    local hadLightAddress = hadLightStore:Address()
+    if not hadLightAddress then return end
+
+    local hadLightValue = utils.read_memory("int", hadLightAddress + Value)
+
+    if hadLightValue == 1 then
+        return true
+    elseif hadLightValue == 0 then
+        return false
+    end
+end
+
+local function WDITDHelp()
+    if not globals.is_focused() then return end
+
+    if WDITDCheck() then
+        render.text(20, screenSize.y - 300, "WDITD Failed :(", 255, 0, 0, 255, "", anglerFont)
+    elseif not WDITDCheck() then
+        render.text(20, screenSize.y - 300, "WDITD Good :D", 0, 255, 0, 255, "", anglerFont)
+    end
+end
+
+local extraCarefulFailed = false
+local function CarefulHelp()
+    if not globals.is_focused() then return end
+
+    if not extraCarefulFailed then
+        render.text(20, screenSize.y - 335, "Extra Careful Good :D", 0, 255, 0, 255, "", anglerFont)
+
+        local player = players:FindChild(entity.localplayer():Name())
+        if not player then return end
+
+        local playerFolder = player:FindChild("PlayerFolder")
+        if not playerFolder then return end
+
+        local healthStore = playerFolder:FindChild("Health")
+        if not healthStore then return end
+
+        local healthAddress = healthStore:Address()
+        if not healthAddress then return end
+
+        local healthValue = utils.read_memory("int", healthAddress + Value)
+
+        if healthValue < 100 then
+            extraCarefulFailed = true
+        end
+    elseif extraCarefulFailed then
+        render.text(20, screenSize.y - 335, "Extra Careful Failed :(", 255, 0, 0, 255, "", anglerFont)
+    end
+end
+
 cheat.set_callback("paint", function()
     if anglerWarnToggle:get() then
         anglerWarn()
@@ -455,5 +543,13 @@ cheat.set_callback("paint", function()
 
     if generatorESPToggle2:get() then
         highlightEndGenerators()
+    end
+
+    if WDITDToggle:get() then
+        WDITDHelp()
+    end
+
+    if CarefulToggle:get() then
+        CarefulHelp()
     end
 end)
