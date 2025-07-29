@@ -237,7 +237,7 @@ local function generatorBrokenCheck(generatorModel)
     local fixedValueAddress = generatorFixedValue:Address()
     if not fixedValueAddress then return end
     
-    local fixedIntValue = utils.read_memory("int", fixedValueAddress + Value)
+    local fixedIntValue = utils.read_memory("bool", fixedValueAddress + Value)
 
     if fixedIntValue < 100 then
         return true
