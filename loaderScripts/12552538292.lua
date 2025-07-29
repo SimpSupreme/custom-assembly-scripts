@@ -9,12 +9,12 @@ local screenSize = render.screen_size()
 local gameplayFolder = workspace:FindChild("GameplayFolder")
 local roomsFolder = gameplayFolder:FindChild("Rooms")
 local anglerFont = render.create_font("C:\\Windows\\Fonts\\Verdana.ttf", 33, "ab")
-local majorFileNames = {"AbstractFile", "LunarDockDocument", "ThePainterDocument", "StanDocument"}
+local majorFileNames = {"AbstractFile", "LunarDockDocument", "ThePainterDocument", "StanDocument", "MindscapeDocument", "AnalogChristmasDocument"} -- currently unused, still finding them
 local fakeDoorNames = {"ServerTrickster", "TricksterRoom", "OutskirtsTrickster"}
-local itemNames = {"Flashlight", "RoomsBattery", "DefaultBattery3", "AltBattery3", "AltBattery2", "AltBattery1", "DefaultBattery1", "DefaultBattery2", "BigFlashBeacon", "Lantern", "SPRINT", "CodeBreacher", "ToyRemote", "BlueToyRemote", "Medkit", "HealthBoost", "WindupLight", "Gummylight"}
-local itemNamesNoLights = {"RoomsBattery", "DefaultBattery3", "AltBattery3", "AltBattery2", "AltBattery1", "DefaultBattery1", "DefaultBattery2", "SPRINT", "CodeBreacher", "ToyRemote", "BlueToyRemote", "Medkit", "HealthBoost"}
+local itemNames = {"RoomsBattery", "DefaultBattery1", "DefaultBattery2", "DefaultBattery3", "AltBattery1", "AltBattery2", "AltBattery3", "FlashLight", "WindupLight", "Gummylight", "Lantern", "BigFlashBeacon", "Book", "Medkit", "HealthBoost", "SPRINT", "CodeBreacher", "ToyRemote", "BlueToyRemote"}
+local itemNamesNoLights = {"RoomsBattery", "DefaultBattery1", "DefaultBattery2", "DefaultBattery3", "AltBattery1", "AltBattery2", "AltBattery3", "Medkit", "HealthBoost", "SPRINT", "CodeBreacher", "ToyRemote", "BlueToyRemote"}
 local keycardNames = {"NormalKeyCard", "PasswordPaper", "InnerKeyCard", "RidgeKeyCard"}
-local anglerVariants = {"Angler", "Blitz", "Froger", "Pinkie", "Chainsmoker", "Pandemonium", "RidgeAngler", "RidgeFroger", "RidgeBlitz", "RidgePinkie", "RidgeChainsmoker", "A60"}
+local anglerVariants = {"Angler", "Blitz", "Froger", "Pinkie", "Chainsmoker", "Pandemonium", "RidgeAngler", "RidgeFroger", "RidgeBlitz", "RidgePinkie", "RidgeChainsmoker", "A60", "Mirage"}
 local currencyNames = {"Blueprint", "Relic"}
 
 local warningsLabel = ui.label("Warnings")
@@ -131,6 +131,19 @@ for _, name in pairs(itemNamesNoLights) do
     noLightsNameSet[name] = true
 end
 
+local itemDisplayNames = {
+    -- Batteries
+    ["RoomsBattery"] = "Battery",
+    ["DefaultBattery1"] = "Battery",
+    ["DefaultBattery2"] = "Battery",
+    ["DefaultBattery3"] = "Battery",
+    ["AltBattery1"] = "Battery",
+    ["AltBattery2"] = "Battery",
+    ["AltBattery3"] = "Battery",
+    ["BigFlashBeacon"] = "Flash Beacon",
+    ["CodeBreacher"] = "Code Breacher"
+}
+
 local function updateItemCache()
     itemNameCache = {}
     itemPosCache = {}
@@ -150,7 +163,9 @@ local function updateItemCache()
                                         local worldPos = prim:GetPartPosition()
                                         if worldPos then
                                             table.insert(itemPosCache, worldPos)
-                                            table.insert(itemNameCache, spawnModel:Name())
+                                            local rawName = spawnModel:Name()
+                                            local displayName = itemDisplayNames[rawName] or rawName
+                                            table.insert(itemNameCache, displayName)
                                         end
                                     end
                                 end
@@ -161,7 +176,9 @@ local function updateItemCache()
                                         local worldPos = prim:GetPartPosition()
                                         if worldPos then
                                             table.insert(itemPosCache, worldPos)
-                                            table.insert(itemNameCache, spawnModel:Name())
+                                            local rawName = spawnModel:Name()
+                                            local displayName = itemDisplayNames[rawName] or rawName
+                                            table.insert(itemNameCache, displayName)
                                         end
                                     end
                                 end
@@ -237,7 +254,7 @@ local function generatorBrokenCheck(generatorModel)
     local fixedValueAddress = generatorFixedValue:Address()
     if not fixedValueAddress then return end
     
-    local fixedIntValue = utils.read_memory("bool", fixedValueAddress + Value)
+    local fixedIntValue = utils.read_memory("int", fixedValueAddress + Value)
 
     if fixedIntValue < 100 then
         return true
@@ -440,7 +457,7 @@ end
 
 local function wallDwellerWarn()
     if not globals.is_focused() then return end
-    local monstersFolder = workspace:FindChild("Monsters")
+    local monstersFolder = gameplayFolder:FindChild("Monsters")
     if not monstersFolder then return end
     if monstersFolder:FindChild("DiVineRoot") then
         render.text((screenSize.x/2 - 50), (screenSize.y - 210), "Wall Dweller", 255, 255, 255, 255, "", anglerFont)
@@ -453,14 +470,14 @@ local function WDITDCheck()
 
     local playerFolder = player:FindChild("PlayerFolder")
     if not playerFolder then return end
-
+    
     local hadLightStore = playerFolder:FindChild("HadLightSource")
     if not hadLightStore then return end
 
     local hadLightAddress = hadLightStore:Address()
     if not hadLightAddress then return end
 
-    local hadLightValue = utils.read_memory("int", hadLightAddress + Value)
+    local hadLightValue = utils.read_memory("bool", hadLightAddress + Value)
 
     if hadLightValue == 1 then
         return true
