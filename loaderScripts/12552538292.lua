@@ -9,17 +9,31 @@ local screenSize = render.screen_size()
 local gameplayFolder = workspace:FindChild("GameplayFolder")
 local roomsFolder = gameplayFolder:FindChild("Rooms")
 local anglerFont = render.create_font("C:\\Windows\\Fonts\\Verdana.ttf", 33, "ab")
-local majorFileNames = {"AbstractFile", "LunarDockDocument", "ThePainterDocument", "StanDocument", "MindscapeDocument", "AnalogChristmasDocument"} -- currently unused, still finding them
+local majorFileNames = {"AbstractDocument", "LunarDockDocument", "ThePainterDocument", "StanDocument", "MindscapeDocument", "AnalogChristmasDocument", "LetVandZoneDocument"} -- currently unused, still finding them
 local fakeDoorNames = {"ServerTrickster", "TricksterRoom", "OutskirtsTrickster"}
-local itemNames = {"RoomsBattery", "DefaultBattery1", "DefaultBattery2", "DefaultBattery3", "AltBattery1", "AltBattery2", "AltBattery3", "FlashLight", "WindupLight", "Gummylight", "Lantern", "BigFlashBeacon", "Book", "Medkit", "HealthBoost", "SPRINT", "CodeBreacher", "ToyRemote", "BlueToyRemote"}
-local itemNamesNoLights = {"RoomsBattery", "DefaultBattery1", "DefaultBattery2", "DefaultBattery3", "AltBattery1", "AltBattery2", "AltBattery3", "Medkit", "HealthBoost", "SPRINT", "CodeBreacher", "ToyRemote", "BlueToyRemote"}
+local itemNames = {"RoomsBattery", "DefaultBattery1", "DefaultBattery2", "DefaultBattery3", "AltBattery1", "AltBattery2", "AltBattery3", "FlashLight", "WindupLight", "Blacklight", "Gummylight", "Lantern", "BigFlashBeacon", "Book", "Medkit", "CrateMedkit", "HealthBoost", "CrateHealthBoost", "Defib", "CrateDefib", "SPRINT", "DoubleSprint", "CodeBreacher", "CrateCodeBreacher", "ToyRemote", "BlueToyRemote"}
+local itemNamesNoLights = {"RoomsBattery", "DefaultBattery1", "DefaultBattery2", "DefaultBattery3", "AltBattery1", "AltBattery2", "AltBattery3", "Medkit", "CrateMedkit", "HealthBoost", "CrateHealthBoost", "Defib", "CrateDefib", "SPRINT", "DoubleSprint", "CodeBreacher", "CrateCodeBreacher", "ToyRemote", "BlueToyRemote"}
 local keycardNames = {"NormalKeyCard", "PasswordPaper", "InnerKeyCard", "RidgeKeyCard"}
 local anglerVariants = {"Angler", "Blitz", "Froger", "Pinkie", "Chainsmoker", "Pandemonium", "RidgeAngler", "RidgeFroger", "RidgeBlitz", "RidgePinkie", "RidgeChainsmoker", "A60", "Mirage"}
 local currencyNames = {"Blueprint", "Relic"}
 
+function Distance(player_pos, enemy_pos)
+    if not player_pos or not enemy_pos then return nil end
+    if not player_pos.z or not enemy_pos.z then return nil end
+
+    
+    local distanceX = player_pos.x - enemy_pos.x
+    local distanceY = player_pos.y - enemy_pos.y
+    local distanceZ = player_pos.z - enemy_pos.z
+    local distance = math.sqrt(distanceX * distanceX + distanceY * distanceY + distanceZ * distanceZ)
+    return distance
+end
+
 local warningsLabel = ui.label("Warnings")
 local anglerWarnToggle = ui.new_checkbox("Angler Warning")
+local anglerDistanceToggle = ui.new_checkbox("Angler Distance")
 local wallDwellerWarnToggle = ui.new_checkbox("Wall Dweller Warning")
+local wallDwellerDistanceToggle = ui.new_checkbox("Wall Dweller Distance")
 local fakeDoorWarnToggle = ui.new_checkbox("Fake Door Warning")
 local voidLockerWarnToggle = ui.new_checkbox("Void Locker Warning")
 
@@ -141,6 +155,13 @@ local itemDisplayNames = {
     ["AltBattery2"] = "Battery",
     ["AltBattery3"] = "Battery",
     ["BigFlashBeacon"] = "Flash Beacon",
+    ["CrateMedkit"] = "Medkit",
+    ["HealthBoost"] = "Cocktail 'Perithesene'",
+    ["CrateHealthBoost"] = "Cocktail 'Perithesene'",
+    ["Defib"] = "Defibrillator",
+    ["CrateDefib"] = "Defibrillator",
+    ["DoubleSprint"] = "SPRINT x2",
+    ["CrateCodeBreacher"] = "Code Breacher",
     ["CodeBreacher"] = "Code Breacher"
 }
 
@@ -450,7 +471,27 @@ local function anglerWarn()
     for _, i in pairs(anglerVariants) do
         -- doesn't work with an inverted if, fuck if I know why
         if workspace:FindChild(i) then
-            render.text((screenSize.x/2 - 50), (screenSize.y - 175), i, 255, 255, 0, 255, "", anglerFont)
+            if anglerDistanceToggle:get() then
+                local lp = entity.localplayer()
+                if not lp then return end
+                local hrp = lp:GetBone("HRP")
+                if not hrp then return end
+                local hrpp = hrp:Primitive()
+                if not hrpp then return end
+                local pos = hrpp:GetPartPosition()
+                if not pos then return end
+
+                local anglerPart = workspace:FindChild(i)
+                if not anglerPart then return end
+                local anglerPrim = anglerPart:Primitive()
+                if not anglerPrim then return end
+                local anglerPos = anglerPrim:GetPartPosition()
+                if not anglerPos then return end
+
+                render.text((screenSize.x/2 - 50), (screenSize.y - 175), ""..i..": "..math.floor(Distance(pos, anglerPos)), 255, 255, 0, 255, "", anglerFont)
+            elseif not anglerDistanceToggle:get() then
+                render.text((screenSize.x/2 - 50), (screenSize.y - 175), i, 255, 255, 0, 255, "", anglerFont)
+            end
         end
     end
 end
@@ -460,7 +501,30 @@ local function wallDwellerWarn()
     local monstersFolder = gameplayFolder:FindChild("Monsters")
     if not monstersFolder then return end
     if monstersFolder:FindChild("DiVineRoot") then
-        render.text((screenSize.x/2 - 50), (screenSize.y - 210), "Wall Dweller", 255, 255, 255, 255, "", anglerFont)
+        if wallDwellerDistanceToggle:get() then
+
+            local lp = entity.localplayer()
+            if not lp then return end
+            local hrp = lp:GetBone("HRP")
+            if not hrp then return end
+            local hrpp = hrp:Primitive()
+            if not hrpp then return end
+            local pos = hrpp:GetPartPosition()
+            if not pos then return end
+
+            local dwellerModel = monstersFolder:FindChild("DiVineRoot")
+            if not dwellerModel then return end
+            local dwellerHRP = dwellerModel:FindChild("HumanoidRootPart")
+            if not dwellerHRP then return end
+            local dwellerPrim = dwellerHRP:Primitive()
+            if not dwellerPrim then return end
+            local dwellerPos = dwellerPrim:GetPartPosition()
+            if not dwellerPos then return end
+
+            render.text((screenSize.x/2- 100), (screenSize.y - 210), "Wall Dweller: "..math.floor(Distance(pos, dwellerPos)), 255, 255, 255, 255, "", 0)
+        elseif not wallDwellerDistanceToggle:get() then
+            render.text((screenSize.x/2- 100), (screenSize.y - 210), "Wall Dweller", 255, 255, 255, 255, "", anglerFont)
+        end
     end
 end
 
@@ -528,10 +592,16 @@ end
 cheat.set_callback("paint", function()
     if anglerWarnToggle:get() then
         anglerWarn()
+        anglerDistanceToggle:set_visible(true)
+    elseif not anglerWarnToggle:get() then
+        anglerDistanceToggle:set_visible(false)
     end
 
     if wallDwellerWarnToggle:get() then
         wallDwellerWarn()
+        wallDwellerDistanceToggle:set_visible(true)
+    elseif not wallDwellerWarnToggle:get() then
+        wallDwellerDistanceToggle:set_visible(false)
     end
 
     if fakeDoorWarnToggle:get() then
