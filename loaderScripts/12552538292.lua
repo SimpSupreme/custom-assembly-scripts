@@ -521,7 +521,7 @@ local function wallDwellerWarn()
             local dwellerPos = dwellerPrim:GetPartPosition()
             if not dwellerPos then return end
 
-            render.text((screenSize.x/2- 100), (screenSize.y - 210), "Wall Dweller: "..math.floor(Distance(pos, dwellerPos)), 255, 255, 255, 255, "", 0)
+            render.text((screenSize.x/2- 100), (screenSize.y - 210), "Wall Dweller: "..math.floor(Distance(pos, dwellerPos)), 255, 255, 255, 255, "", anglerFont)
         elseif not wallDwellerDistanceToggle:get() then
             render.text((screenSize.x/2- 100), (screenSize.y - 210), "Wall Dweller", 255, 255, 255, 255, "", anglerFont)
         end
