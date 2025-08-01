@@ -4,6 +4,7 @@ my collection of awfuly coded scripts for the Assembly Roblox external.
 ## supported games
 - [Pressure](https://www.roblox.com/games/12411473842/Worth-The-Wait-Pressure)
 - [Grave/Digger](https://www.roblox.com/games/18259975825/Grave-Digger-BETA)
+- [Doors](https://www.roblox.com/games/6516141723/DOORS)
 
 ## other scripts
 - health counter
