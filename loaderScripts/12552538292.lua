@@ -9,15 +9,28 @@ local screenSize = render.screen_size()
 local gameplayFolder = workspace:FindChild("GameplayFolder")
 local roomsFolder = gameplayFolder:FindChild("Rooms")
 local anglerFont = render.create_font("C:\\Windows\\Fonts\\Verdana.ttf", 33, "ab")
-local majorFileNames = {"AbstractDocument", "LunarDockDocument", "ThePainterDocument", "StanDocument", "MindscapeDocument", "AnalogChristmasDocument", "LetVandZoneDocument", "DiVineDocument"} -- currently unused, still finding them
+local majorFileNames = {"AbstractDocument", "LunarDockDocument", "ThePainterDocument", "StanDocument", "MindscapeDocument", "AnalogChristmasDocument", "LetVandZoneDocument", "DiVineDocument", "RidgeDocument"} -- currently unused, still finding them
 local fakeDoorNames = {"ServerTrickster", "TricksterRoom", "OutskirtsTrickster"}
-local itemNames = {"RoomsBattery", "DefaultBattery1", "DefaultBattery2", "DefaultBattery3", "AltBattery1", "AltBattery2", "AltBattery3", "FlashLight", "Flashlight", "WindupLight", "Blacklight", "Gummylight", "Lantern", "BigFlashBeacon", "FlashBeacon", "Book", "Medkit", "CrateMedkit", "HealthBoost", "CrateHealthBoost", "Defib", "CrateDefib", "SPRINT", "DoubleSprint", "CodeBreacher", "CrateCodeBreacher", "ToyRemote", "BlueToyRemote"}
+local itemNames = {"RoomsBattery", "DefaultBattery1", "DefaultBattery2", "DefaultBattery3", "AltBattery1", "AltBattery2", "AltBattery3", "FlashLight", "Flashlight", "WindupLight", "Blacklight", "Gummylight", "Lantern", "SmallLantern", "BigFlashBeacon", "FlashBeacon", "Book", "Medkit", "CrateMedkit", "HealthBoost", "CrateHealthBoost", "Defib", "CrateDefib", "SPRINT", "DoubleSprint", "CodeBreacher", "CrateCodeBreacher", "ToyRemote", "BlueToyRemote"}
 local itemNamesNoLights = {"RoomsBattery", "DefaultBattery1", "DefaultBattery2", "DefaultBattery3", "AltBattery1", "AltBattery2", "AltBattery3", "Medkit", "CrateMedkit", "HealthBoost", "CrateHealthBoost", "Defib", "CrateDefib", "SPRINT", "DoubleSprint", "CodeBreacher", "CrateCodeBreacher", "ToyRemote", "BlueToyRemote"}
 local keycardNames = {"NormalKeyCard", "PasswordPaper", "InnerKeyCard", "RidgeKeyCard"}
 local anglerVariants = {"Angler", "Blitz", "Froger", "Pinkie", "Chainsmoker", "Pandemonium", "RidgeAngler", "RidgeFroger", "RidgeBlitz", "RidgePinkie", "RidgeChainsmoker", "A60", "Mirage"}
 local currencyNames = {"Blueprint", "Relic"}
 
-function Distance(player_pos, enemy_pos)
+local function playerPosition()
+    local lp = entity.localplayer()
+    if not lp then return end
+    local hrp = lp:GetBone("HRP")
+    if not hrp then return end
+    local hrpp = hrp:Primitive()
+    if not hrpp then return end
+    local pos = hrpp:GetPartPosition()
+    if not pos then return end
+
+    return pos
+end
+
+local function Distance(player_pos, enemy_pos)
     if not player_pos or not enemy_pos then return nil end
     if not player_pos.z or not enemy_pos.z then return nil end
 
@@ -40,6 +53,7 @@ local voidLockerWarnToggle = ui.new_checkbox("Void Locker Warning")
 local spacer = ui.label("")
 
 local highlightsLabel = ui.label("ESP/Highlights")
+local renderDistanceSlider = ui.slider_int("Render Distance (0 for inf range)", 0000, 0, 1000, "%d")
 local moneyESPToggle = ui.new_checkbox("Money ESP")
 local itemESPToggle = ui.new_checkbox("Item ESP")
 local keycardESPToggle = ui.new_checkbox("Keycard/Password ESP")
@@ -154,6 +168,7 @@ local itemDisplayNames = {
     ["AltBattery1"] = "Battery",
     ["AltBattery2"] = "Battery",
     ["AltBattery3"] = "Battery",
+    ["SmallLantern"] = "Lantern",
     ["BigFlashBeacon"] = "Flash Beacon",
     ["FlashBeacon"] = "Flash Beacon",
     ["CrateMedkit"] = "Medkit",
@@ -350,7 +365,13 @@ local function highlightCurrency()
     for _, worldPos in pairs(currencyCache) do
         local screenPos = utils.world_to_screen(worldPos)
         if screenPos.x > 0 then
-            render.text(screenPos.x, screenPos.y, "Currency", 255, 255, 255, 255, "", 0)
+            if renderDistanceSlider:get() == 0 then
+                render.text(screenPos.x, screenPos.y, "Currency", 255, 255, 255, 255, "", 0)
+            elseif renderDistanceSlider:get() > 0 then               
+                if Distance(playerPosition(), worldPos) <= renderDistanceSlider:get() then
+                    render.text(screenPos.x, screenPos.y, "Currency", 255, 255, 255, 255, "", 0)
+                end
+            end
         end
     end
 end
@@ -371,7 +392,13 @@ local function highlightItems()
         local screenPos = utils.world_to_screen(worldPos)
         if screenPos.x > 0 then
             local itemName = itemNameCache[i]
-            render.text(screenPos.x, screenPos.y, itemName, 0, 255, 0, 255, "", 0)
+            if renderDistanceSlider:get() == 0 then
+                render.text(screenPos.x, screenPos.y, itemName, 0, 255, 0, 255, "", 0)
+            elseif renderDistanceSlider:get() > 0 then
+                if Distance(playerPosition(), worldPos) <= renderDistanceSlider:get() then
+                    render.text(screenPos.x, screenPos.y, itemName, 0, 255, 0, 255, "", 0)
+                end
+            end
         end
     end
 
@@ -390,7 +417,13 @@ local function highlightKeycards()
     for _, worldPos in pairs(keycardCache) do
         local screenPos = utils.world_to_screen(worldPos)
         if screenPos.x > 0 then
-            render.text(screenPos.x, screenPos.y, "Key", 0, 255, 255, 255, "", 0)
+            if renderDistanceSlider:get() == 0 then
+                render.text(screenPos.x, screenPos.y, "Key", 0, 255, 255, 255, "", 0)
+            elseif renderDistanceSlider:get() > 0 then
+                if Distance(playerPosition(), worldPos) <= renderDistanceSlider:get() then
+                    render.text(screenPos.x, screenPos.y, "Key", 0, 255, 255, 255, "", 0)
+                end
+            end
         end
     end
 end
@@ -408,7 +441,13 @@ local function highlightMonsterLockers()
     for _, worldPos in pairs(monsterLockerCache) do
         local screenPos = utils.world_to_screen(worldPos)
         if screenPos.x > 0 then
-            render.text(screenPos.x, screenPos.y, "Void Locker", 255, 0, 255, 255, "", 0)
+            if renderDistanceSlider:get() == 0 then
+                render.text(screenPos.x, screenPos.y, "Void Locker", 255, 0, 255, 255, "", 0)
+            elseif renderDistanceSlider:get() > 0 then
+                if Distance(playerPosition(), worldPos) <= renderDistanceSlider:get() then
+                    render.text(screenPos.x, screenPos.y, "Void Locker", 255, 0, 255, 255, "", 0)
+                end
+            end
         end
     end
 end
@@ -426,7 +465,13 @@ local function highlightFakeDoors()
     for _, worldPos in pairs(fakeDoorCache) do
         local screenPos = utils.world_to_screen(worldPos)
         if screenPos.x > 0 then
-            render.text(screenPos.x, screenPos.y, "Fake Door", 255, 0, 0, 255, "", 0)
+            if renderDistanceSlider:get() == 0 then
+                render.text(screenPos.x, screenPos.y, "Fake Door", 255, 0, 0, 255, "", 0)
+            elseif renderDistanceSlider:get() > 0 then
+                if Distance(playerPosition(), worldPos) <= renderDistanceSlider:get() then
+                    render.text(screenPos.x, screenPos.y, "Fake Door", 255, 0, 0, 255, "", 0)
+                end
+            end
         end
     end
 end
@@ -444,7 +489,13 @@ local function highlightMidGenerators()
     for _, worldPos in pairs(generatorCache) do
         local screenPos = utils.world_to_screen(worldPos)
         if screenPos.x > 0 then
-            render.text(screenPos.x, screenPos.y, "Broken Generator", 225, 90, 90, 255, "", 0)
+            if renderDistanceSlider:get() == 0 then
+                render.text(screenPos.x, screenPos.y, "Broken Generator", 225, 90, 90, 255, "", 0)
+            elseif renderDistanceSlider:get() > 0 then
+                if Distance(playerPosition(), worldPos) <= renderDistanceSlider:get() then
+                    render.text(screenPos.x, screenPos.y, "Broken Generator", 225, 90, 90, 255, "", 0)
+                end
+            end
         end
     end
 end
@@ -462,7 +513,13 @@ local function highlightEndGenerators()
     for _, worldPos in pairs(generatorCache2) do
         local screenPos = utils.world_to_screen(worldPos)
         if screenPos.x > 0 then
-            render.text(screenPos.x, screenPos.y, "Broken Generator", 225, 90, 90, 255, "", 0)
+            if renderDistanceSlider:get() == 0 then
+                render.text(screenPos.x, screenPos.y, "Broken Generator", 225, 90, 90, 255, "", 0)
+            elseif renderDistanceSlider:get() > 0 then
+                if Distance(playerPosition(), worldPos) <= renderDistanceSlider:get() then
+                    render.text(screenPos.x, screenPos.y, "Broken Generator", 225, 90, 90, 255, "", 0)
+                end
+            end
         end
     end
 end
@@ -473,15 +530,6 @@ local function anglerWarn()
         -- doesn't work with an inverted if, fuck if I know why
         if workspace:FindChild(i) then
             if anglerDistanceToggle:get() then
-                local lp = entity.localplayer()
-                if not lp then return end
-                local hrp = lp:GetBone("HRP")
-                if not hrp then return end
-                local hrpp = hrp:Primitive()
-                if not hrpp then return end
-                local pos = hrpp:GetPartPosition()
-                if not pos then return end
-
                 local anglerPart = workspace:FindChild(i)
                 if not anglerPart then return end
                 local anglerPrim = anglerPart:Primitive()
@@ -489,7 +537,7 @@ local function anglerWarn()
                 local anglerPos = anglerPrim:GetPartPosition()
                 if not anglerPos then return end
 
-                render.text((screenSize.x/2 - 50), (screenSize.y - 175), ""..i..": "..math.floor(Distance(pos, anglerPos)), 255, 255, 0, 255, "", anglerFont)
+                render.text((screenSize.x/2 - 50), (screenSize.y - 175), ""..i..": "..math.floor(Distance(playerPosition(), anglerPos)), 255, 255, 0, 255, "", anglerFont)
             elseif not anglerDistanceToggle:get() then
                 render.text((screenSize.x/2 - 50), (screenSize.y - 175), i, 255, 255, 0, 255, "", anglerFont)
             end
@@ -503,16 +551,6 @@ local function wallDwellerWarn()
     if not monstersFolder then return end
     if monstersFolder:FindChild("DiVineRoot") then
         if wallDwellerDistanceToggle:get() then
-
-            local lp = entity.localplayer()
-            if not lp then return end
-            local hrp = lp:GetBone("HRP")
-            if not hrp then return end
-            local hrpp = hrp:Primitive()
-            if not hrpp then return end
-            local pos = hrpp:GetPartPosition()
-            if not pos then return end
-
             local dwellerModel = monstersFolder:FindChild("DiVineRoot")
             if not dwellerModel then return end
             local dwellerHRP = dwellerModel:FindChild("HumanoidRootPart")
@@ -522,7 +560,7 @@ local function wallDwellerWarn()
             local dwellerPos = dwellerPrim:GetPartPosition()
             if not dwellerPos then return end
 
-            render.text((screenSize.x/2- 100), (screenSize.y - 210), "Wall Dweller: "..math.floor(Distance(pos, dwellerPos)), 255, 255, 255, 255, "", anglerFont)
+            render.text((screenSize.x/2- 100), (screenSize.y - 210), "Wall Dweller: "..math.floor(Distance(playerPosition(), dwellerPos)), 255, 255, 255, 255, "", anglerFont)
         elseif not wallDwellerDistanceToggle:get() then
             render.text((screenSize.x/2- 100), (screenSize.y - 210), "Wall Dweller", 255, 255, 255, 255, "", anglerFont)
         end
