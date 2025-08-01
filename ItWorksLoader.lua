@@ -1,6 +1,6 @@
 local placeID = globals.place_id()
 if not placeID then return end
-local supportedPlaceIDs = {12552538292, 18259975825}
+local supportedPlaceIDs = {12552538292, 18259975825, 6839171747}
 
 local gameSet = {}
 for _, name in pairs(supportedPlaceIDs) do
