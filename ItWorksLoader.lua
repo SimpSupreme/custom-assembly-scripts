@@ -20,6 +20,8 @@ elseif placeID == 6516141723 then
     print("Please load the Doors script when in-game <3")
 elseif placeID == 0 then
     print("Please unload the script and load it again when in a game <3")
+else
+    print("This game is not supported :(")
 end
 print("Made by @SINpathy in the discord :3")
 print("all scripts are open source, find them at https://github.com/SimpSupreme/custom-assembly-scripts")
