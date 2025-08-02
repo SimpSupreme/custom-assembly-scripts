@@ -114,26 +114,40 @@ local function keyCacheUpdate()
     if not curRoom then print("current Room not found") return end
     local assetsFolder = curRoom:FindChild("Assets")
     if not assetsFolder then print("assets folder not found") return end
-    local assets = assetsFolder:Children()
-    if not assets then print("nothing found in assets folder") return end
-    for _, child in ipairs(assets) do
-        if child:ClassName() == "Folder" and child:Name() == "Alternate" then
-            local keysFolder = child:FindChild("Keys")
-            if keysFolder then
-                local keysChildren = keysFolder:Children()
-                if keysChildren then
-                    for _, folders in ipairs(keysChildren) do
-                        local keyModel = folders:FindChild("KeyObtain")
-                        if keyModel then
-                            local hitbox1 = keyModel:FindChild("Hitbox")
-                            if not hitbox1 then print("Hitbox 1 not found") return end
-                            local hitbox2 = hitbox1:FindChild("KeyHitbox")
-                            if not hitbox2 then print("key hitbox not found") return end
-                            local hitbox2Prim = hitbox2:Primitive()
-                            if not hitbox2Prim then return end
-                            local hitbox2Pos = hitbox2Prim:GetPartPosition()
-                            if not hitbox2Pos then return end
-                            table.insert(keyCache, hitbox2Pos)
+    if assetsFolder:FindChild("KeyObtain") then
+        local keyModel = assetsFolder:FindChild("KeyObtain")
+        if not keyModel then return end
+        local hitbox1 = keyModel:FindChild("Hitbox")
+        if not hitbox1 then print("Hitbox 1 not found") return end
+        local hitbox2 = hitbox1:FindChild("KeyHitbox")
+        if not hitbox2 then print("key hitbox not found") return end
+        local hitbox2Prim = hitbox2:Primitive()
+        if not hitbox2Prim then return end
+        local hitbox2Pos = hitbox2Prim:GetPartPosition()
+        if not hitbox2Pos then return end
+        table.insert(keyCache, hitbox2Pos)
+    elseif not assets:FindChild("KeyObtain") then
+        local assets = assetsFolder:Children()
+        if not assets then print("nothing found in assets folder") return end
+        for _, child in ipairs(assets) do
+            if child:ClassName() == "Folder" and child:Name() == "Alternate" then
+                local keysFolder = child:FindChild("Keys")
+                if keysFolder then
+                    local keysChildren = keysFolder:Children()
+                    if keysChildren then
+                        for _, folders in ipairs(keysChildren) do
+                            local keyModel = folders:FindChild("KeyObtain")
+                            if keyModel then
+                                local hitbox1 = keyModel:FindChild("Hitbox")
+                                if not hitbox1 then print("Hitbox 1 not found") return end
+                                local hitbox2 = hitbox1:FindChild("KeyHitbox")
+                                if not hitbox2 then print("key hitbox not found") return end
+                                local hitbox2Prim = hitbox2:Primitive()
+                                if not hitbox2Prim then return end
+                                local hitbox2Pos = hitbox2Prim:GetPartPosition()
+                                if not hitbox2Pos then return end
+                                table.insert(keyCache, hitbox2Pos)
+                            end
                         end
                     end
                 end
