@@ -42,6 +42,7 @@ local spacer = ui.label("")
 
 local warningsLabel = ui.label("Warnings")
 local rushWarnToggle = ui.new_checkbox("Rush Warning")
+local eyesWarningToggle = ui.new_checkbox("Eyes Warning")
 local nextRoomToggle = ui.new_checkbox("Display Next Room")
 local fakeDoorWarnToggle = ui.new_checkbox("Dupe Door Warning")
 
@@ -181,18 +182,9 @@ local function keyCacheUpdate()
     if not curRoom then print("current Room not found") return end
     local assetsFolder = curRoom:FindChild("Assets")
     if not assetsFolder then print("assets folder not found") return end
+    local keyModel = nil
     if assetsFolder:FindChild("KeyObtain") then
-        local keyModel = assetsFolder:FindChild("KeyObtain")
-        if not keyModel then return end
-        local hitbox1 = keyModel:FindChild("Hitbox")
-        if not hitbox1 then print("Hitbox 1 not found") return end
-        local hitbox2 = hitbox1:FindChild("KeyHitbox")
-        if not hitbox2 then print("key hitbox not found") return end
-        local hitbox2Prim = hitbox2:Primitive()
-        if not hitbox2Prim then return end
-        local hitbox2Pos = hitbox2Prim:GetPartPosition()
-        if not hitbox2Pos then return end
-        table.insert(keyCache, hitbox2Pos)
+        keyModel = assetsFolder:FindChild("KeyObtain")
     elseif not assetsFolder:FindChild("KeyObtain") then
         local assets = assetsFolder:Children()
         if not assets then print("nothing found in assets folder") return end
@@ -203,53 +195,33 @@ local function keyCacheUpdate()
                     local keysChildren = keysFolder:Children()
                     if keysChildren then
                         for _, folders in ipairs(keysChildren) do
-                            local keyModel = folders:FindChild("KeyObtain")
-                            if keyModel then
-                                local hitbox1 = keyModel:FindChild("Hitbox")
-                                if not hitbox1 then print("Hitbox 1 not found") return end
-                                local hitbox2 = hitbox1:FindChild("KeyHitbox")
-                                if not hitbox2 then print("key hitbox not found") return end
-                                local hitbox2Prim = hitbox2:Primitive()
-                                if not hitbox2Prim then return end
-                                local hitbox2Pos = hitbox2Prim:GetPartPosition()
-                                if not hitbox2Pos then return end
-                                table.insert(keyCache, hitbox2Pos)
+                            if folders:FindChild("KeyObtain") then
+                                keyModel = folders:FindChild("KeyObtain")
                             end
                         end
                     end
                 end
             elseif lootLocationSet[child:Name()] then
                 if child:FindChild("KeyObtain") then
-                    local keyModel = child:FindChild("KeyObtain")
-                    if keyModel then
-                        local hitbox1 = keyModel:FindChild("Hitbox")
-                        if not hitbox1 then print("Hitbox 1 not found") return end
-                        local hitbox2 = hitbox1:FindChild("KeyHitbox")
-                        if not hitbox2 then print("key hitbox not found") return end
-                        local hitbox2Prim = hitbox2:Primitive()
-                        if not hitbox2Prim then return end
-                        local hitbox2Pos = hitbox2Prim:GetPartPosition()
-                        if not hitbox2Pos then return end
-                        table.insert(keyCache, hitbox2Pos)
-                    end
+                    keyModel = child:FindChild("KeyObtain")
                 elseif child:FindChild("DrawerContainer") then
                     for _, drawers in ipairs(child:Children()) do
-                        local keyModel = drawers:FindChild("KeyObtain")
-                        if keyModel then
-                            local hitbox1 = keyModel:FindChild("Hitbox")
-                            if not hitbox1 then print("Hitbox 1 not found") return end
-                            local hitbox2 = hitbox1:FindChild("KeyHitbox")
-                            if not hitbox2 then print("key hitbox not found") return end
-                            local hitbox2Prim = hitbox2:Primitive()
-                            if not hitbox2Prim then return end
-                            local hitbox2Pos = hitbox2Prim:GetPartPosition()
-                            if not hitbox2Pos then return end
-                            table.insert(keyCache, hitbox2Pos)
-                        end
+                        keyModel = drawers:FindChild("KeyObtain")
                     end
                 end
             end
         end
+    end
+    if keyModel ~= nil then
+        local hitbox1 = keyModel:FindChild("Hitbox")
+        if not hitbox1 then print("Hitbox 1 not found") return end
+        local hitbox2 = hitbox1:FindChild("KeyHitbox")
+        if not hitbox2 then print("key hitbox not found") return end
+        local hitbox2Prim = hitbox2:Primitive()
+        if not hitbox2Prim then return end
+        local hitbox2Pos = hitbox2Prim:GetPartPosition()
+        if not hitbox2Pos then return end
+        table.insert(keyCache, hitbox2Pos)
     end
 end
 
@@ -359,8 +331,8 @@ local function GateLeverHighlight()
 
     if not globals.is_focused() then return end
     
-    if gateLeverPosCache.x > 0 then
-        local screenPos = utils.world_to_screen(gateLeverPosCache)
+    local screenPos = utils.world_to_screen(gateLeverPosCache)
+    if gateLeverPosCache.x > 0 or gateLeverPosCache.y > 0 or gateLeverPosCache.z > 0 then
         if screenPos.x > 0 then
             if renderDistanceSlider:get() == 0 then
                 render.text(screenPos.x, screenPos.y, "Gate Lever", 255, 255, 255, 255, "", 0)
@@ -498,15 +470,26 @@ end
 local function rushWarn()
     if not globals.is_focused() then return end
     if workspace:FindChild("RushMoving") then
-        render.text((screenSize.x/2 - 55), (screenSize.y - 185), "Rush", 255, 255, 0, 255, "", rushFont)
+        render.text((screenSize.x/2 - 40), (screenSize.y - 185), "Rush", 255, 255, 0, 255, "", rushFont)
     elseif workspace:FindChild("AmbushMoving") then
-        render.text((screenSize.x/2 - 55), (screenSize.y - 185), "Ambush", 255, 255, 0, 255, "", rushFont)
+        render.text((screenSize.x/2 - 40), (screenSize.y - 185), "Ambush", 255, 255, 0, 255, "", rushFont)
+    end
+end
+
+local function eyesWarn()
+    if not globals.is_focused() then return end
+    if workspace:FindChild("Eyes") then
+        render.text((screenSize.x/2 - 40), (screenSize.y - 220), "Eyes", 255, 255, 255, 255, "", rushFont)
     end
 end
 
 cheat.set_callback("paint", function()
     if rushWarnToggle:get() then
         rushWarn()
+    end
+
+    if eyesWarningToggle:get() then
+        eyesWarn()
     end
 
     if nextRoomToggle:get() then
