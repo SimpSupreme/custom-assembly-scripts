@@ -2,6 +2,8 @@ Render Distance
 
 # Warnings
 Rush Warning  
+Eyes Warning  
+Sally Warning  
 Room Number Display  
 Dupe Warning  
 
