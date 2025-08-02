@@ -1,8 +1,8 @@
 # Warnings  
 Angler Warning  
-    Angler Distance Check    
+&nbsp;&nbsp;&nbsp;&nbsp;    Angler Distance Check    
 Wall Dweller Warning  
-    Wall Dweller Distance Check    
+&nbsp;&nbsp;&nbsp;&nbsp;    Wall Dweller Distance Check    
 Fake Door Warning  
 Void Locker Warning  
 # ESP/Highlights
