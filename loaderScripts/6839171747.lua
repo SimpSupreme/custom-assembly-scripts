@@ -43,6 +43,7 @@ local spacer = ui.label("")
 local warningsLabel = ui.label("Warnings")
 local rushWarnToggle = ui.new_checkbox("Rush Warning")
 local eyesWarningToggle = ui.new_checkbox("Eyes Warning")
+local sallyWarnToggle = ui.new_checkbox("Sally Warning")
 local nextRoomToggle = ui.new_checkbox("Display Next Room")
 local fakeDoorWarnToggle = ui.new_checkbox("Dupe Door Warning")
 
@@ -203,10 +204,14 @@ local function keyCacheUpdate()
                 end
             elseif lootLocationSet[child:Name()] then
                 if child:FindChild("KeyObtain") then
-                    keyModel = child:FindChild("KeyObtain")
+                    if child:FindChild("KeyObtain") then
+                        keyModel = child:FindChild("KeyObtain")
+                    end
                 elseif child:FindChild("DrawerContainer") then
                     for _, drawers in ipairs(child:Children()) do
-                        keyModel = drawers:FindChild("KeyObtain")
+                        if drawers:FindChild("KeyObtain") then
+                            keyModel = drawers:FindChild("KeyObtain")
+                        end
                     end
                 end
             end
@@ -483,6 +488,13 @@ local function eyesWarn()
     end
 end
 
+local function sallyWarn()
+    if not globals.is_focused() then return end
+    if workspace:FindChild("Sally") then
+        render.text((screenSize.x/2 - 40), (screenSize.y - 220), "Sally", 255, 0, 255, 255, "", rushFont)
+    end
+end
+
 cheat.set_callback("paint", function()
     if rushWarnToggle:get() then
         rushWarn()
@@ -490,6 +502,10 @@ cheat.set_callback("paint", function()
 
     if eyesWarningToggle:get() then
         eyesWarn()
+    end
+
+    if sallyWarnToggle:get() then
+        sallyWarn()
     end
 
     if nextRoomToggle:get() then
