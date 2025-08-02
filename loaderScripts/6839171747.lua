@@ -2,12 +2,8 @@ http.get("https://raw.githubusercontent.com/SimpSupreme/custom-assembly-scripts/
     loadstring(v)()
 end)
 
-local moneyNames = {"GoldPile"}
-local possibleLootAssets = {"Dresser", "Table", "Rolltop_Desk", "DrawerContainer"}
-local itemNames = {"Candle", "Bandage", "Lighter", "Battery"}
-local keyNames = {"KeyObtain"}
-local fakeDoorNames = {"DupeDoor"}
-local nodeMonsters = {"RushMoving", "AmbushMoving"}
+local possibleLootAssets = {"Dresser", "Table", "Rolltop_Desk", "DrawerContainer", "SmoothieSpawner"}
+local itemNames = {"Candle", "Bandage", "Lighter", "Battery", "Flashlight", "Smoothie"}
 local workspace = globals.workspace()
 if not workspace then return end
 local roomsFolder = workspace:FindChild("CurrentRooms")
@@ -54,6 +50,8 @@ local spacer2 = ui.label("")
 local highlightLabel = ui.label("Highlights")
 local gateLeverHighlightToggle = ui.new_checkbox("Gate Lever Highlight")
 local keyHighlightToggle = ui.new_checkbox("Key Highlight")
+local goldHighlightToggle = ui.new_checkbox("Gold Highlight")
+local itemHighlightToggle = ui.new_checkbox("Item Highlight")
 local libraryPaperHighlightToggle = ui.new_checkbox("Highlight Library Hint Paper")
 local libraryBooksHighlightToggle = ui.new_checkbox("Highlight Library Books")
 
@@ -64,6 +62,9 @@ local gateLeverPosCache = Vector3(0, 0, 0)
 local libraryPaperPos = 0
 local libraryBooksCache = {}
 local keyCache = {}
+local goldCache = {}
+local itemPosCache = {}
+local itemNameCache = {}
 local libraryPaperPos = 0
 local nextRoomUpdate = 0
 local fakeDoorUpdate = 0
@@ -71,6 +72,9 @@ local gateLeverUpdate = 0
 local keyUpdate = 0
 local libraryPaperUpdate = 0
 local libraryBooksUpdate = 0
+local goldUpdate = 0
+local itemUpdate = 0
+
 
 local function nextRoomCacheUpdate()
     local rooms = roomsFolder:Children()
@@ -249,6 +253,65 @@ local function keyCacheUpdate()
     end
 end
 
+local function goldCacheUpdate()
+    goldCache = {}
+
+    local rooms = roomsFolder:Children()
+    if not rooms then return end
+    local curRoom = rooms[#rooms - 1]
+    if not curRoom then return end
+    local assetsFolder = curRoom:FindChild("Assets")
+    for _, item in ipairs(assetsFolder:Children()) do
+        if lootLocationSet[item:Name()] then
+            if item:FindChild("GoldPile") then
+                local goldPile = item:FindChild("GoldPile")
+                if not goldPile then return end
+                local goldHitbox = goldPile:FindChild("Hitbox")
+                if not goldHitbox then return end
+                local hitboxPrim = goldHitbox:Primitive()
+                if not hitboxPrim then return end
+                local hitboxPos = hitboxPrim:GetPartPosition()
+                if not hitboxPos then return end
+                table.insert(goldCache, hitboxPos)
+            end
+        end
+    end
+end
+
+local itemNameSet = {}
+for _, name in pairs(itemNames) do
+    itemNameSet[name] = true
+end
+
+local function itemCacheUpdate()
+    itemPosCache = {}
+    itemNameCache = {}
+
+    local rooms = roomsFolder:Children()
+    if not rooms then return end
+    local curRoom = rooms[#rooms - 1]
+    if not curRoom then return end
+    local assetsFolder = curRoom:FindChild("Assets")
+    for _, item in ipairs(assetsFolder:Children()) do
+        if lootLocationSet[item:Name()] then
+            if item:FindChildByClass("Model") then
+                local spawnedItem = item:FindChildByClass("Model")
+                if not spawnedItem then return end
+                if itemNameSet[spawnedItem:Name()] then
+                    local itemMain = spawnedItem:FindChild("Main")
+                    if not itemMain then return end
+                    local mainPrim = itemMain:Primitive()
+                    if not mainPrim then return end
+                    local mainPos = mainPrim:GetPartPosition()
+                    if not mainPos then return end
+                    table.insert(itemPosCache, mainPos)
+                    table.insert(itemNameCache, spawnedItem:Name())
+                end
+            end
+        end
+    end
+end
+
 local function nextRoom()
     local now = globals.curtime()
 
@@ -259,7 +322,7 @@ local function nextRoom()
 
     if not globals.is_focused() then return end
 
-    render.text(40, 40, "Next Room: "..nextRoomCache, 255, 255, 255, 255, "", 0)
+    render.text(40, (screenSize.y - 80), "Next Room: "..nextRoomCache, 255, 255, 255, 255, "", 0)
 end
 
 local function fakeDoorCheck()
@@ -328,6 +391,56 @@ local function keyHighlight()
             elseif renderDistanceSlider:get() > 0 then
                 if Distance(playerPosition(), worldPos) <= renderDistanceSlider:get() then
                     render.text(screenPos.x, screenPos.y, "Key", 0, 255, 255, 255, "", 0)
+                end
+            end
+        end
+    end
+end
+
+local function goldHighlight()
+    local now = globals.curtime()
+
+    if now - goldUpdate >= updateInterval then
+        goldCacheUpdate()
+        goldUpdate = now
+    end
+
+    if not globals.is_focused() then return end
+
+    for _, worldPos in pairs(goldCache) do
+        local screenPos = utils.world_to_screen(worldPos)
+        if screenPos.x > 0 then
+            if renderDistanceSlider:get() == 0 then
+                render.text(screenPos.x, screenPos.y, "Gold", 218, 165, 32, 255, "", 0)
+            elseif renderDistanceSlider:get() > 0 then
+                if Distance(playerPosition(), worldPos) <= renderDistanceSlider:get() then
+                    render.text(screenPos.x, screenPos.y, "Gold", 218, 165, 32, 255, "", 0)
+                end
+            end
+        end
+    end
+end
+
+local function highlightItems()
+    local now = globals.curtime()
+
+    if now - itemUpdate >= updateInterval then
+        itemCacheUpdate()
+        itemUpdate = now
+    end
+
+    if not globals.is_focused() then return end
+
+    for i = 1, #itemPosCache do
+        local worldPos = itemPosCache[i]
+        local screenPos = utils.world_to_screen(worldPos)
+        if screenPos.x > 0 then
+            local itemName = itemNameCache[i]
+            if renderDistanceSlider:get() == 0 then
+                render.text(screenPos.x, screenPos.y, itemName, 0, 255, 0, 255, "", 0)
+            elseif renderDistanceSlider:get() > 0 then
+                if Distance(playerPosition(), worldPos) <= renderDistanceSlider:get() then
+                    render.text(screenPos.x, screenPos.y, itemName, 0, 255, 0, 255, "", 0)
                 end
             end
         end
@@ -410,6 +523,14 @@ cheat.set_callback("paint", function()
 
     if keyHighlightToggle:get() then
         keyHighlight()
+    end
+
+    if goldHighlightToggle:get() then
+        goldHighlight()
+    end
+
+    if itemHighlightToggle:get() then
+        highlightItems()
     end
 
     if libraryPaperHighlightToggle:get() then
