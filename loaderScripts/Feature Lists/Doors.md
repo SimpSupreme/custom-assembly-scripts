@@ -8,5 +8,7 @@ Dupe Warning
 # Highlights  
 Gate Lever Highlight  
 Key Highlight  
+Gold Highlight  
+Item Highlight  
 Library Hint Paper Highlight  
 Library Book Highlight
