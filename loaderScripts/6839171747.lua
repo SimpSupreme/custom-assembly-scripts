@@ -1,8 +1,13 @@
+http.get("https://raw.githubusercontent.com/SimpSupreme/custom-assembly-scripts/refs/heads/main/scripts/AssemblyOffsetsNoPrint.lua", function(v)
+    loadstring(v)()
+end)
+
 local moneyNames = {"GoldPile"}
+local possibleLootAssets = {"Dresser", "Table", "Rolltop_Desk", "DrawerContainer"}
 local itemNames = {"Candle", "Bandage", "Lighter", "Battery"}
 local keyNames = {"KeyObtain"}
 local fakeDoorNames = {"DupeDoor"}
-local nodeMonsters = {"RushMoving"}
+local nodeMonsters = {"RushMoving", "AmbushMoving"}
 local workspace = globals.workspace()
 if not workspace then return end
 local roomsFolder = workspace:FindChild("CurrentRooms")
@@ -49,16 +54,23 @@ local spacer2 = ui.label("")
 local highlightLabel = ui.label("Highlights")
 local gateLeverHighlightToggle = ui.new_checkbox("Gate Lever Highlight")
 local keyHighlightToggle = ui.new_checkbox("Key Highlight")
+local libraryPaperHighlightToggle = ui.new_checkbox("Highlight Library Hint Paper")
+local libraryBooksHighlightToggle = ui.new_checkbox("Highlight Library Books")
 
 local updateInterval = 1
 local nextRoomCache = 0
 local fakeDoorCache = {}
-local gateLeverPosCache = 0
+local gateLeverPosCache = Vector3(0, 0, 0)
+local libraryPaperPos = 0
+local libraryBooksCache = {}
 local keyCache = {}
+local libraryPaperPos = 0
 local nextRoomUpdate = 0
 local fakeDoorUpdate = 0
 local gateLeverUpdate = 0
 local keyUpdate = 0
+local libraryPaperUpdate = 0
+local libraryBooksUpdate = 0
 
 local function nextRoomCacheUpdate()
     local rooms = roomsFolder:Children()
@@ -88,6 +100,8 @@ local function fakeDoorCacheUpdate()
 end
 
 local function gateLeverCacheUpdate()
+    gateLeverPosCache = Vector3(0, 0, 0)
+
     local rooms = roomsFolder:Children()
     if not rooms then return end
     local curRoom = rooms[#rooms - 1]
@@ -103,6 +117,55 @@ local function gateLeverCacheUpdate()
     local mainPos = mainPrim:GetPartPosition()
     if not mainPos then return end
     gateLeverPosCache = mainPos
+end
+
+local function doorFiftyHintCacher()
+    libraryPaperPos = 0
+    local rooms = roomsFolder:Children()
+    if not rooms then return end
+    if rooms[#rooms - 1]:Name() ~= "50" then return end
+
+    local encounterRoom = roomsFolder:FindChild("50")
+    if not encounterRoom then return end
+    local libraryPaperModel = encounterRoom:FindChild("LibraryHintPaper")
+    if not libraryPaperModel then return end
+    local libraryPaperHandle = libraryPaperModel:FindChild("Handle")
+    if not libraryPaperHandle then return end
+    local handlePrim = libraryPaperHandle:Primitive()
+    if not handlePrim then return end
+    local handlePos = handlePrim:GetPartPosition()
+    if not handlePos then return end
+    libraryPaperPos = handlePos
+end
+
+local function libraryBooksCacheUpdate()
+    libraryBooksCache = {}
+    local rooms = roomsFolder:Children()
+    if not rooms then return end
+    if rooms[#rooms - 1]:Name() ~= "50" then return end
+
+    local encounterRoom = roomsFolder:FindChild("50")
+    if not encounterRoom then return end
+    local assetsFolder = encounterRoom:FindChild("Assets")
+    if not assetsFolder then return end
+    local bookshelvesFolder = assetsFolder:FindChild("Bookshelves1")
+    if not bookshelvesFolder then return end
+    for _, bookshelf in ipairs(bookshelvesFolder:Children()) do
+        if bookshelf:FindChild("HintBook") then
+            local book = bookshelf:FindChild("HintBook")
+            if not book then return end
+            local bookPrim = book:Primitive()
+            if not bookPrim then return end
+            local bookPos = bookPrim:GetPartPosition()
+            if not bookPos then return end
+            table.insert(libraryBooksCache, bookPos)
+        end
+    end
+end
+
+local lootLocationSet = {}
+for _, name in pairs(possibleLootAssets) do
+    lootLocationSet[name] = true
 end
 
 local function keyCacheUpdate()
@@ -126,7 +189,7 @@ local function keyCacheUpdate()
         local hitbox2Pos = hitbox2Prim:GetPartPosition()
         if not hitbox2Pos then return end
         table.insert(keyCache, hitbox2Pos)
-    elseif not assets:FindChild("KeyObtain") then
+    elseif not assetsFolder:FindChild("KeyObtain") then
         local assets = assetsFolder:Children()
         if not assets then print("nothing found in assets folder") return end
         for _, child in ipairs(assets) do
@@ -148,6 +211,36 @@ local function keyCacheUpdate()
                                 if not hitbox2Pos then return end
                                 table.insert(keyCache, hitbox2Pos)
                             end
+                        end
+                    end
+                end
+            elseif lootLocationSet[child:Name()] then
+                if child:FindChild("KeyObtain") then
+                    local keyModel = child:FindChild("KeyObtain")
+                    if keyModel then
+                        local hitbox1 = keyModel:FindChild("Hitbox")
+                        if not hitbox1 then print("Hitbox 1 not found") return end
+                        local hitbox2 = hitbox1:FindChild("KeyHitbox")
+                        if not hitbox2 then print("key hitbox not found") return end
+                        local hitbox2Prim = hitbox2:Primitive()
+                        if not hitbox2Prim then return end
+                        local hitbox2Pos = hitbox2Prim:GetPartPosition()
+                        if not hitbox2Pos then return end
+                        table.insert(keyCache, hitbox2Pos)
+                    end
+                elseif child:FindChild("DrawerContainer") then
+                    for _, drawers in ipairs(child:Children()) do
+                        local keyModel = drawers:FindChild("KeyObtain")
+                        if keyModel then
+                            local hitbox1 = keyModel:FindChild("Hitbox")
+                            if not hitbox1 then print("Hitbox 1 not found") return end
+                            local hitbox2 = hitbox1:FindChild("KeyHitbox")
+                            if not hitbox2 then print("key hitbox not found") return end
+                            local hitbox2Prim = hitbox2:Primitive()
+                            if not hitbox2Prim then return end
+                            local hitbox2Pos = hitbox2Prim:GetPartPosition()
+                            if not hitbox2Pos then return end
+                            table.insert(keyCache, hitbox2Pos)
                         end
                     end
                 end
@@ -202,14 +295,16 @@ local function GateLeverHighlight()
     end
 
     if not globals.is_focused() then return end
-
-    local screenPos = utils.world_to_screen(gateLeverPosCache)
-    if screenPos.x > 0 then
-        if renderDistanceSlider:get() == 0 then
-            render.text(screenPos.x, screenPos.y, "Gate Lever", 255, 255, 255, 255, "", 0)
-        elseif renderDistanceSlider:get() > 0 then
-            if Distance(playerPosition(), worldPos) <= renderDistanceSlider:get() then
+    
+    if gateLeverPosCache.x > 0 then
+        local screenPos = utils.world_to_screen(gateLeverPosCache)
+        if screenPos.x > 0 then
+            if renderDistanceSlider:get() == 0 then
                 render.text(screenPos.x, screenPos.y, "Gate Lever", 255, 255, 255, 255, "", 0)
+            elseif renderDistanceSlider:get() > 0 then
+                if Distance(playerPosition(), worldPos) <= renderDistanceSlider:get() then
+                    render.text(screenPos.x, screenPos.y, "Gate Lever", 255, 255, 255, 255, "", 0)
+                end
             end
         end
     end
@@ -239,10 +334,60 @@ local function keyHighlight()
     end
 end
 
+local function doorFiftyHintHighlight()
+    local now = globals.curtime()
+
+    if now - libraryPaperUpdate >= updateInterval then
+        doorFiftyHintCacher()
+        libraryPaperUpdate = now
+    end
+
+    if not globals.is_focused() then return end
+    
+    if libraryPaperPos then
+        local screenPos = utils.world_to_screen(libraryPaperPos)
+        if screenPos.x > 0 then
+            if renderDistanceSlider:get() == 0 then
+                render.text(screenPos.x, screenPos.y, "Hint Paper", 255, 255, 255, 255, "", 0)
+            elseif renderDistanceSlider:get() > 0 then
+                if Distance(playerPosition(), worldPos) <= renderDistanceSlider:get() then
+                    render.text(screenPos.x, screenPos.y, "Hint Paper", 255, 255, 255, 255, "", 0)
+                end
+            end
+        end
+    end
+end
+
+local function doorFiftyBooksHighlight()
+    local now = globals.curtime()
+
+    if now - libraryBooksUpdate >= updateInterval then
+        libraryBooksCacheUpdate()
+        libraryBooksUpdate = now
+    end
+
+    if not globals.is_focused() then return end
+
+    for _, worldPos in pairs(libraryBooksCache) do
+        local screenPos = utils.world_to_screen(worldPos)
+        if screenPos.x > 0 then
+            if renderDistanceSlider:get() == 0 then
+                render.text(screenPos.x, screenPos.y, "Book", 0, 255, 255, 255, "", 0)
+            elseif renderDistanceSlider:get() > 0 then  
+                if Distance(playerPosition(), worldPos) <= renderDistanceSlider:get() then
+                    render.text(screenPos.x, screenPos.y, "Book", 0, 255, 255, 255, "", 0)
+                end
+            end
+        end
+    end
+end
+
 local function rushWarn()
     if not globals.is_focused() then return end
     if workspace:FindChild("RushMoving") then
-        render.text((screenSize.x/2 - 50), (screenSize.y - 175), "Rush", 255, 255, 0, 255, "", rushFont)
+        render.text((screenSize.x/2 - 55), (screenSize.y - 185), "Rush", 255, 255, 0, 255, "", rushFont)
+    elseif workspace:FindChild("AmbushMoving") then
+        render.text((screenSize.x/2 - 55), (screenSize.y - 185), "Ambush", 255, 255, 0, 255, "", rushFont)
     end
 end
 
@@ -265,5 +410,13 @@ cheat.set_callback("paint", function()
 
     if keyHighlightToggle:get() then
         keyHighlight()
+    end
+
+    if libraryPaperHighlightToggle:get() then
+        doorFiftyHintHighlight()
+    end
+
+    if libraryBooksHighlightToggle:get() then
+        doorFiftyBooksHighlight()
     end
 end)
