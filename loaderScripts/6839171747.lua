@@ -238,6 +238,8 @@ local function goldCacheUpdate()
     local curRoom = rooms[#rooms - 1]
     if not curRoom then return end
     local assetsFolder = curRoom:FindChild("Assets")
+    if not assetsFolder then return end
+    local goldPileModel = nil
     for _, item in ipairs(assetsFolder:Children()) do
         if lootLocationSet[item:Name()] then
             if item:FindChild("GoldPile") then
@@ -250,6 +252,27 @@ local function goldCacheUpdate()
                 local hitboxPos = hitboxPrim:GetPartPosition()
                 if not hitboxPos then return end
                 table.insert(goldCache, hitboxPos)
+            end
+        end
+    end
+    for _, sideRoom in ipairs(curRoom:Children()) do
+        if sideRoom:ClassName() == "Model" and sideRoom:Name() == "Sideroom" then
+            local sideAssetsFolder = sideRoom:FindChild("Assets")
+            if not sideAssetsFolder then return end
+            for _, spawn in ipairs(sideAssetsFolder:Children()) do
+                if lootLocationSet[spawn:Name()] then
+                    if spawn:FindChild("GoldPile") then
+                        local goldPile = spawn:FindChild("GoldPile")
+                        if not goldPile then return end
+                        local goldHitbox = goldPile:FindChild("Hitbox")
+                        if not goldHitbox then return end
+                        local hitboxPrim = goldHitbox:Primitive()
+                        if not hitboxPrim then return end
+                        local hitboxPos = hitboxPrim:GetPartPosition()
+                        if not hitboxPos then return end
+                        table.insert(goldCache, hitboxPos)
+                    end
+                end
             end
         end
     end
@@ -283,6 +306,30 @@ local function itemCacheUpdate()
                     if not mainPos then return end
                     table.insert(itemPosCache, mainPos)
                     table.insert(itemNameCache, spawnedItem:Name())
+                end
+            end
+        end
+    end
+    for _, sideRoom in ipairs(curRoom:Children()) do
+        if sideRoom:ClassName() == "Model" and sideRoom:Name() == "Sideroom" then
+            local sideAssetsFolder = sideRoom:FindChild("Assets")
+            if not sideAssetsFolder then return end
+            for _, spawn in ipairs(sideAssetsFolder:Children()) do
+                if lootLocationSet[spawn:Name()] then
+                    if spawn:FindChildByClass("Model") then
+                        local spawnedItem = spawn:FindChildByClass("Model")
+                        if not spawnedItem then return end
+                        if itemNameSet[spawnedItem:Name()] then
+                            local itemMain = spawnedItem:FindChild("Main")
+                            if not itemMain then return end
+                            local mainPrim = itemMain:Primitive()
+                            if not mainPrim then return end
+                            local mainPos = mainPrim:GetPartPosition()
+                            if not mainPos then return end
+                            table.insert(itemPosCache, mainPos)
+                            table.insert(itemNameCache, spawnedItem:Name())
+                        end
+                    end
                 end
             end
         end
@@ -491,7 +538,7 @@ end
 local function sallyWarn()
     if not globals.is_focused() then return end
     if workspace:FindChild("Sally") then
-        render.text((screenSize.x/2 - 40), (screenSize.y - 220), "Sally", 255, 0, 255, 255, "", rushFont)
+        render.text((screenSize.x/2 - 40), (screenSize.y - 255), "Sally", 255, 0, 255, 255, "", rushFont)
     end
 end
 
