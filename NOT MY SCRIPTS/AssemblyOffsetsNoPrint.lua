@@ -1,3 +1,5 @@
+-- original made by @nfpw in the discord, I just edited out the printing to keep the logs clear
+
 local Adornee = nil
 local Anchored = nil
 local AnimationId = nil
