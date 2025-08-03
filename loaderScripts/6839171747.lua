@@ -1,4 +1,4 @@
-http.get("https://raw.githubusercontent.com/SimpSupreme/custom-assembly-scripts/refs/heads/main/scripts/AssemblyOffsetsNoPrint.lua", function(v)
+http.get("https://raw.githubusercontent.com/SimpSupreme/custom-assembly-scripts/refs/heads/main/NOT%20MY%20SCRIPTS/AssemblyOffsetsNoPrint.lua", function(v)
     loadstring(v)()
 end)
 
