@@ -2,8 +2,8 @@ http.get("https://raw.githubusercontent.com/SimpSupreme/custom-assembly-scripts/
     loadstring(v)()
 end)
 
-local possibleLootAssets = {"Dresser", "Table", "Rolltop_Desk", "DrawerContainer", "SmoothieSpawner"}
-local itemNames = {"Candle", "Bandage", "Lighter", "Battery", "Flashlight", "Smoothie"}
+local possibleLootAssets = {"Dresser", "Table", "Rolltop_Desk", "DrawerContainer", "SmoothieSpawner", "Toolshed_Small"}
+local itemNames = {"Candle", "Bandage", "Lighter", "Battery", "Flashlight", "Smoothie", "SkeletonKey", "Vitamins", "Crucifix", "Shears"}
 local workspace = globals.workspace()
 if not workspace then return end
 local roomsFolder = workspace:FindChild("CurrentRooms")
@@ -44,6 +44,8 @@ local warningsLabel = ui.label("Warnings")
 local rushWarnToggle = ui.new_checkbox("Rush Warning")
 local eyesWarningToggle = ui.new_checkbox("Eyes Warning")
 local sallyWarnToggle = ui.new_checkbox("Sally Warning")
+local screechWarnToggle = ui.new_checkbox("Screech Warning")
+local snareWarningToggle = ui.new_checkbox("Snare Warning/Highlight")
 local nextRoomToggle = ui.new_checkbox("Display Next Room")
 local fakeDoorWarnToggle = ui.new_checkbox("Dupe Door Warning")
 
@@ -56,6 +58,8 @@ local goldHighlightToggle = ui.new_checkbox("Gold Highlight")
 local itemHighlightToggle = ui.new_checkbox("Item Highlight")
 local libraryPaperHighlightToggle = ui.new_checkbox("Highlight Library Hint Paper")
 local libraryBooksHighlightToggle = ui.new_checkbox("Highlight Library Books")
+local doorHundredBreakerToggle = ui.new_checkbox("Door 100 Breaker Highlight")
+local doorHundredKeyToggle = ui.new_checkbox("Door 100 Key Highlight")
 
 local updateInterval = 1
 local nextRoomCache = 0
@@ -67,6 +71,9 @@ local keyCache = {}
 local goldCache = {}
 local itemPosCache = {}
 local itemNameCache = {}
+local snareCache = {}
+local breakerCache = {}
+local electricalKeyCache = {}
 local libraryPaperPos = 0
 local nextRoomUpdate = 0
 local fakeDoorUpdate = 0
@@ -76,6 +83,9 @@ local libraryPaperUpdate = 0
 local libraryBooksUpdate = 0
 local goldUpdate = 0
 local itemUpdate = 0
+local snareUpdate = 0
+local breakerUpdate = 0
+local electricalKeyUpdate = 0
 
 
 local function nextRoomCacheUpdate()
@@ -165,6 +175,66 @@ local function libraryBooksCacheUpdate()
             local bookPos = bookPrim:GetPartPosition()
             if not bookPos then return end
             table.insert(libraryBooksCache, bookPos)
+        end
+    end
+end
+
+local function snareCacheUpdate()
+    snareCache = {}
+
+    local rooms = roomsFolder:Children()
+    if not rooms then return end
+    local curRoom = rooms[#rooms - 1]
+    if not curRoom then return end
+    local assetsFolder = curRoom:FindChild("Assets")
+    if not assetsFolder then return end
+    for _, snare in ipairs(assetsFolder:Children()) do
+        if snare:Name() == "Snare" then
+            local snareVoid = snare:FindChild("Void")
+            if not snareVoid then return end
+            local voidPrim = snareVoid:Primitive()
+            if not voidPrim then return end
+            local voidPos = voidPrim:GetPartPosition()
+            if not voidPos then return end
+            table.insert(snareCache, voidPos)
+        end
+    end
+end
+
+local function doorHundredCacheUpdate()
+    breakerCache = {}
+
+    local curRoom = roomsFolder:FindChild("100")
+    if not curRoom then return end
+    for _, breaker in ipairs(curRoom:Children()) do
+        if breaker:Name() == "LiveBreakerPolePickup" then
+            local breakerBase = breaker:FindChild("Base")
+            if not breakerBase then return end
+            local basePrim = breakerBase:Primitive()
+            if not basePrim then return end
+            local basePos = basePrim:GetPartPosition()
+            if not basePos then return end
+            table.insert(breakerCache, basePos)
+        end
+    end
+end
+
+local function doorHundredKeyCacher()
+    local curRoom = roomsFolder:FindChild("100")
+    if not curRoom then return end
+    local assetsFolder = curRoom:FindChild("Assets")
+    if not assetsFolder then return end
+    for _, key in ipairs(assetsFolder:Children()) do
+        if key:Name() == "ElectricalKeyObtain" then
+            local hitbox1 = key:FindChild("Hitbox")
+            if not hitbox1 then print("Hitbox 1 not found") return end
+            local hitbox2 = hitbox1:FindChild("Key")
+            if not hitbox2 then print("key hitbox not found") return end
+            local hitbox2Prim = hitbox2:Primitive()
+            if not hitbox2Prim then return end
+            local hitbox2Pos = hitbox2Prim:GetPartPosition()
+            if not hitbox2Pos then return end
+            table.insert(electricalKeyCache, hitbox2Pos)
         end
     end
 end
@@ -471,6 +541,54 @@ local function highlightItems()
     end
 end
 
+local function breakerHighlight()
+    local now = globals.curtime()
+
+    if now - breakerUpdate >= updateInterval then
+        doorHundredCacheUpdate()
+        breakerUpdate = now
+    end
+
+    if not globals.is_focused() then return end
+
+    for _, worldPos in pairs(breakerCache) do
+        local screenPos = utils.world_to_screen(worldPos)
+        if screenPos.x > 0 then
+            if renderDistanceSlider:get() == 0 then
+                render.text(screenPos.x, screenPos.y, "Breaker", 255, 255, 255, 255, "", 0)
+            elseif renderDistanceSlider:get() > 0 then
+                if Distance(playerPosition(), worldPos) <= renderDistanceSlider:get() then
+                    render.text(screenPos.x, screenPos.y, "Breaker", 255, 255, 255, 255, "", 0)
+                end
+            end
+        end
+    end
+end
+
+local function electricalKeyHighlight()
+    local now = globals.curtime()
+
+    if now - electricalKeyUpdate >= updateInterval then
+        doorHundredKeyCacher()
+        electricalKeyUpdate = now
+    end
+
+    if not globals.is_focused() then return end
+
+    for _, worldPos in pairs(electricalKeyCache) do
+        local screenPos = utils.world_to_screen(worldPos)
+        if screenPos.x > 0 then
+            if renderDistanceSlider:get() == 0 then
+                render.text(screenPos.x, screenPos.y, "Electrical Key", 0, 255, 255, 255, "", 0)
+            elseif renderDistanceSlider:get() > 0 then
+                if Distance(playerPosition(), worldPos) <= renderDistanceSlider:get() then
+                    render.text(screenPos.x, screenPos.y, "Electrical Key", 0, 255, 255, 255, "", 0)
+                end
+            end
+        end
+    end
+end
+
 local function doorFiftyHintHighlight()
     local now = globals.curtime()
 
@@ -519,6 +637,30 @@ local function doorFiftyBooksHighlight()
     end
 end
 
+local function snareHighlight()
+    local now = globals.curtime()
+
+    if now - snareUpdate >= updateInterval then
+        snareCacheUpdate()
+        snareUpdate = now
+    end
+
+    if not globals.is_focused() then return end
+
+    for _, worldPos in pairs(snareCache) do
+        local screenPos = utils.world_to_screen(worldPos)
+        if screenPos.x > 0 then
+            if renderDistanceSlider:get() == 0 then
+                render.text(screenPos.x, screenPos.y, "Snare", 255, 255, 255, 255, "", 0)
+            elseif renderDistanceSlider:get() > 0 then
+                if Distance(playerPosition(), worldPos) <= renderDistanceSlider:get() then
+                    render.text(screenPos.x, screenPos.y, "Snare", 255, 255, 255, 255, "", 0)
+                end
+            end
+        end
+    end
+end
+
 local function rushWarn()
     if not globals.is_focused() then return end
     if workspace:FindChild("RushMoving") then
@@ -537,8 +679,16 @@ end
 
 local function sallyWarn()
     if not globals.is_focused() then return end
-    if workspace:FindChild("Sally") then
+    if workspace:FindChild("Sally") or workspace:FindChild("SallyWindow") then
         render.text((screenSize.x/2 - 40), (screenSize.y - 255), "Sally", 255, 0, 255, 255, "", rushFont)
+    end
+end
+
+local function screechWarn()
+    local camera = workspace:FindChild("Camera")
+    if not camera then return end
+    if camera:FindChild("Screech") then
+        render.text((screenSize.x/2 - 40), (screenSize.y - 290), "Screech", 225, 90, 90, 255, "", rushFont)
     end
 end
 
@@ -553,6 +703,14 @@ cheat.set_callback("paint", function()
 
     if sallyWarnToggle:get() then
         sallyWarn()
+    end
+
+    if screechWarnToggle:get() then
+        screechWarn()
+    end
+
+    if snareWarningToggle:get() then
+        snareHighlight()
     end
 
     if nextRoomToggle:get() then
@@ -585,5 +743,13 @@ cheat.set_callback("paint", function()
 
     if libraryBooksHighlightToggle:get() then
         doorFiftyBooksHighlight()
+    end
+
+    if doorHundredBreakerToggle:get() then
+        breakerHighlight()
+    end
+
+    if doorHundredKeyToggle:get() then
+        electricalKeyHighlight()
     end
 end)
