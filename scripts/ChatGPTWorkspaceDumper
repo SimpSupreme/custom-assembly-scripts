@@ -1,0 +1,31 @@
+local function fullpath(path)
+    return "workspace\\" .. path
+end
+
+-- Ensure the output directory exists
+os.execute("mkdir " .. fullpath(""))
+
+-- File utility
+local function writefile(path, content)
+    local f = io.open(fullpath(path), "w")
+    if f then f:write(content) f:close() end
+end
+
+-- Recursive dump function
+local function dump_instance(instance, indent)
+    local output = string.rep("  ", indent) .. instance:Name() .. " [" .. instance:ClassName() .. "]\n"
+    local children = instance:Children()
+
+    for _, child in ipairs(children) do
+        output = output .. dump_instance(child, indent + 1)
+    end
+
+    return output
+end
+
+-- Get the root of the hierarchy (workspace)
+local root = globals.workspace()
+local result = dump_instance(root, 0)
+
+-- Write the result to a file
+writefile("hierarchy_dump.txt", result)
