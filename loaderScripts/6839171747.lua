@@ -248,17 +248,17 @@ local function keyCacheUpdate()
     keyCache = {}
 
     local rooms = roomsFolder:Children()
-    if not rooms then print("nothing in rooms folder") return end
+    if not rooms then return end
     local curRoom = rooms[#rooms - 1]
-    if not curRoom then print("current Room not found") return end
+    if not curRoom then return end
     local assetsFolder = curRoom:FindChild("Assets")
-    if not assetsFolder then print("assets folder not found") return end
+    if not assetsFolder then return end
     local keyModel = nil
     if assetsFolder:FindChild("KeyObtain") then
         keyModel = assetsFolder:FindChild("KeyObtain")
     elseif not assetsFolder:FindChild("KeyObtain") then
         local assets = assetsFolder:Children()
-        if not assets then print("nothing found in assets folder") return end
+        if not assets then return end
         for _, child in ipairs(assets) do
             if child:ClassName() == "Folder" and child:Name() == "Alternate" then
                 local keysFolder = child:FindChild("Keys")
@@ -599,7 +599,7 @@ local function doorFiftyHintHighlight()
 
     if not globals.is_focused() then return end
     
-    if libraryPaperPos then
+    if libraryPaperPos ~= 0 then
         local screenPos = utils.world_to_screen(libraryPaperPos)
         if screenPos.x > 0 then
             if renderDistanceSlider:get() == 0 then
