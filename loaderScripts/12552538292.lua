@@ -15,7 +15,7 @@ local itemNames = {"RoomsBattery", "DefaultBattery1", "DefaultBattery2", "Defaul
 local itemNamesNoLights = {"RoomsBattery", "DefaultBattery1", "DefaultBattery2", "DefaultBattery3", "AltBattery1", "AltBattery2", "AltBattery3", "Medkit", "CrateMedkit", "HealthBoost", "CrateHealthBoost", "Defib", "CrateDefib", "SPRINT", "DoubleSprint", "CodeBreacher", "CrateCodeBreacher", "ToyRemote", "BlueToyRemote"}
 local keycardNames = {"NormalKeyCard", "PasswordPaper", "InnerKeyCard", "RidgeKeyCard"}
 local anglerVariants = {"Angler", "Blitz", "Froger", "Pinkie", "Chainsmoker", "Pandemonium", "RidgeAngler", "RidgeFroger", "RidgeBlitz", "RidgePinkie", "RidgeChainsmoker", "A60", "Mirage"}
-local currencyNames = {"Blueprint", "Relic"}
+local currencyNames = {"Blueprint", "Relic", "HypnoCoin"}
 
 local function playerPosition()
     local lp = entity.localplayer()
@@ -28,6 +28,12 @@ local function playerPosition()
     if not pos then return end
 
     return pos
+end
+
+local function currentRoom()
+    local rooms = roomsFolder:Children()
+    local curRoom = rooms[#rooms - 1]
+    return curRoom
 end
 
 local function Distance(player_pos, enemy_pos)
@@ -53,6 +59,7 @@ local voidLockerWarnToggle = ui.new_checkbox("Void Locker Warning")
 local spacer = ui.label("")
 
 local highlightsLabel = ui.label("ESP/Highlights")
+local curRoomOnlyToggle = ui.new_checkbox("Current Room Only")
 local renderDistanceSlider = ui.slider_int("Render Distance (0 for inf range)", 0000, 0, 1000, "%d")
 local moneyESPToggle = ui.new_checkbox("Money ESP")
 local itemESPToggle = ui.new_checkbox("Item ESP")
@@ -92,19 +99,42 @@ end
 local function updateCurrencyCache()
     currencyCache = {}
 
-    for _, room in pairs(roomsFolder:Children()) do
-        for _, model in pairs(room:Children()) do
+    if curRoomOnlyToggle:get() then
+        for _, model in ipairs(currentRoom():Children()) do
             if model:ClassName() == "Model" then
                 local spawnLocationsFolder = model:FindChild("SpawnLocations")
                 if spawnLocationsFolder then
                     for _, spawn in pairs(spawnLocationsFolder:Children()) do
                         for _, spawned in pairs(spawn:Children()) do
-                            if string.find(spawned:Name(), "^Currency") or currencyNameSet[spawned:Name()] then
+                            if string.find(spawned:Name(), "^Currency") or string.find(spawned:Name(), "^GY") or currencyNameSet[spawned:Name()] then
                                 local prim = spawn:Primitive()
                                 if prim then
                                     local worldPos = prim:GetPartPosition()
                                     if worldPos then
                                         table.insert(currencyCache, worldPos)
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    elseif not curRoomOnlyToggle:get() then
+        for _, room in pairs(roomsFolder:Children()) do
+            for _, model in pairs(room:Children()) do
+                if model:ClassName() == "Model" then
+                    local spawnLocationsFolder = model:FindChild("SpawnLocations")
+                    if spawnLocationsFolder then
+                        for _, spawn in pairs(spawnLocationsFolder:Children()) do
+                            for _, spawned in pairs(spawn:Children()) do
+                                if string.find(spawned:Name(), "^Currency") or string.find(spawned:Name(), "^GY") or currencyNameSet[spawned:Name()] then
+                                    local prim = spawn:Primitive()
+                                    if prim then
+                                        local worldPos = prim:GetPartPosition()
+                                        if worldPos then
+                                            table.insert(currencyCache, worldPos)
+                                        end
                                     end
                                 end
                             end
@@ -124,8 +154,8 @@ end
 local function updateKeycardCache()
     keycardCache = {}
 
-    for _, room in pairs(roomsFolder:Children()) do
-        for _, model in pairs(room:Children()) do
+    if curRoomOnlyToggle:get() then
+        for _, model in pairs(currentRoom():Children()) do
             if model:ClassName() == "Model" then
                 local spawnLocationsFolder = model:FindChild("SpawnLocations")
                 if spawnLocationsFolder then
@@ -138,6 +168,30 @@ local function updateKeycardCache()
                                     local worldPos = prim:GetPartPosition()
                                     if worldPos then
                                         table.insert(keycardCache, worldPos)
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    elseif not curRoomOnlyToggle:get() then
+        for _, room in pairs(roomsFolder:Children()) do
+            for _, model in pairs(room:Children()) do
+                if model:ClassName() == "Model" then
+                    local spawnLocationsFolder = model:FindChild("SpawnLocations")
+                    if spawnLocationsFolder then
+                        for _, spawn in pairs(spawnLocationsFolder:Children()) do
+                            local spawned = spawn:FindChildByClass("Model")
+                            if spawned then
+                                if keycardNameSet[spawned:Name()] then
+                                    local prim = spawn:Primitive()
+                                    if prim then
+                                        local worldPos = prim:GetPartPosition()
+                                        if worldPos then
+                                            table.insert(keycardCache, worldPos)
+                                        end
                                     end
                                 end
                             end
@@ -185,8 +239,8 @@ local function updateItemCache()
     itemNameCache = {}
     itemPosCache = {}
 
-    for _, room in pairs(roomsFolder:Children()) do
-        for _, model in pairs(room:Children()) do
+    if curRoomOnlyToggle:get() then
+        for _, model in pairs(currentRoom():Children()) do
             if model:ClassName() == "Model" then
                 local spawnLocationsFolder = model:FindChild("SpawnLocations")
                 if spawnLocationsFolder then
@@ -225,14 +279,56 @@ local function updateItemCache()
                 end
             end
         end
+    elseif not curRoomOnlyToggle:get() then
+        for _, room in pairs(roomsFolder:Children()) do
+            for _, model in pairs(room:Children()) do
+                if model:ClassName() == "Model" then
+                    local spawnLocationsFolder = model:FindChild("SpawnLocations")
+                    if spawnLocationsFolder then
+                        for _, spawn in pairs(spawnLocationsFolder:Children()) do
+                            local spawnModel = spawn:FindChildByClass("Model")
+                            if spawnModel then
+                                if WDITDToggle:get() then
+                                    if noLightsNameSet[spawnModel:Name()] then
+                                        local prim = spawn:Primitive()
+                                        if prim then
+                                            local worldPos = prim:GetPartPosition()
+                                            if worldPos then
+                                                table.insert(itemPosCache, worldPos)
+                                                local rawName = spawnModel:Name()
+                                                local displayName = itemDisplayNames[rawName] or rawName
+                                                table.insert(itemNameCache, displayName)
+                                            end
+                                        end
+                                    end
+                                elseif not WDITDToggle:get() then
+                                    if itemNameSet[spawnModel:Name()] then
+                                        local prim = spawn:Primitive()
+                                        if prim then
+                                            local worldPos = prim:GetPartPosition()
+                                            if worldPos then
+                                                table.insert(itemPosCache, worldPos)
+                                                local rawName = spawnModel:Name()
+                                                local displayName = itemDisplayNames[rawName] or rawName
+                                                table.insert(itemNameCache, displayName)
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
     end
 end
 
 local function updateMonsterLockerCache()
     monsterLockerCache = {} 
 
-    for _, room in pairs(roomsFolder:Children()) do
-        for _, models in pairs(room:Children()) do
+    if curRoomOnlyToggle:get() then
+        for _, models in pairs(currentRoom():Children()) do
             if models:Name() == "MonsterLocker" then
                 local collisionBox = models:FindChild("LockerCollision")
                 if collisionBox then
@@ -241,6 +337,23 @@ local function updateMonsterLockerCache()
                         local worldPos = prim:GetPartPosition()
                         if worldPos then
                             table.insert(monsterLockerCache, worldPos)
+                        end
+                    end
+                end
+            end
+        end
+    elseif not curRoomOnlyToggle:get() then
+        for _, room in pairs(roomsFolder:Children()) do
+            for _, models in pairs(room:Children()) do
+                if models:Name() == "MonsterLocker" then
+                    local collisionBox = models:FindChild("LockerCollision")
+                    if collisionBox then
+                        local prim = collisionBox:Primitive()
+                        if prim then
+                            local worldPos = prim:GetPartPosition()
+                            if worldPos then
+                                table.insert(monsterLockerCache, worldPos)
+                            end
                         end
                     end
                 end
@@ -255,8 +368,33 @@ for _, name in pairs(fakeDoorNames) do
 end
 
 local function updateFakeDoorCache()
-    fakeDoorCache = {} -- Clear previous data
+    fakeDoorCache = {}
 
+    if curRoomOnlyToggle:get() then
+        for _, models in pairs(currentRoom():Children()) do
+            if fakeDoorNameSet[models:Name()] then
+                local doorInteractables = models:FindChild("Interactables")
+                if doorInteractables then
+                    local tricksterModel = doorInteractables:FindChild("Trickster")
+                    if tricksterModel then
+                        local doorModel = tricksterModel:FindChild("TricksterDoor")
+                        if doorModel then
+                            local doorRoot = doorModel:FindChild("Root")
+                            if doorRoot then
+                                local doorRootPrim = doorRoot:Primitive()
+                                if doorRootPrim then
+                                    local doorRootPos = doorRootPrim:GetPartPosition()
+                                    if doorRootPos then
+                                        table.insert(fakeDoorCache, doorRootPos)
+                                    end
+                                end
+                            end
+                        end    
+                    end
+                end    
+            end
+        end
+    end
     for _, room in pairs(roomsFolder:Children()) do
         for _, models in pairs(room:Children()) do
             if fakeDoorNameSet[models:Name()] then
@@ -304,7 +442,7 @@ local function updateMidGeneratorCache()
     generatorCache = {} -- Clear previous data
 
     local encounterRoom = roomsFolder:FindChild("SearchlightsEncounter")
-    if encounterRoom then
+    if encounterRoom and currentRoom():Name() == encounterRoom:Name() then
         local encounterInteractables = encounterRoom:FindChild("Interactables")
         if encounterInteractables then
             for _, models in pairs(encounterInteractables:Children()) do
@@ -330,7 +468,7 @@ local function updateEndGeneratorCache()
     generatorCache2 = {} -- Clear previous data
 
     local encounterRoom = roomsFolder:FindChild("SearchlightsEnding")
-    if encounterRoom then
+    if encounterRoom and currentRoom():Name() == encounterRoom:Name() then
         local encounterInteractables = encounterRoom:FindChild("Interactables")
         if encounterInteractables then
             for _, models in pairs(encounterInteractables:Children()) do
