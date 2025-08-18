@@ -1,5 +1,5 @@
 # custom-assembly-scripts
-my collection of awfuly coded scripts for the Assembly Roblox external. 
+my collection of awfuly coded scripts for the Assembly Roblox external. if/when I use AI, I'll make it very obvious.
 
 ## supported games
 - [Pressure](https://www.roblox.com/games/12411473842/Worth-The-Wait-Pressure)
