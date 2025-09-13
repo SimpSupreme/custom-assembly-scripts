@@ -18,6 +18,12 @@ local radioIcon = render.texture("https://trello.com/1/cards/67a61f889a8da348432
 local geistIcon = render.texture("https://trello.com/1/cards/67d5b0c3ca8a93fa5f28e620/attachments/68c48ae15695d05b9c24f854/download/geist_trooper_icon.png")
 local trenchIcon = render.texture("https://trello.com/1/cards/67cc95d5d7c3e18683b56950/attachments/6825f834657f013737c868a5/download/trench_icon.png")
 local bulwarkIcon = render.texture("https://trello.com/1/cards/67d596a1a564f47a73c78910/attachments/67d5f448a29f2245710f3259/download/Untitled.png")
+local mantrapIcon = render.texture("https://github.com/SimpSupreme/custom-assembly-scripts/blob/main/loaderScripts/Images/GraveDigger/BearTrap.png?raw=true")
+local tinBombIcon = render.texture("https://github.com/SimpSupreme/custom-assembly-scripts/blob/main/loaderScripts/Images/GraveDigger/TinBomb.png?raw=true")
+local gasTrapIcon = render.texture("https://github.com/SimpSupreme/custom-assembly-scripts/blob/main/loaderScripts/Images/GraveDigger/GasTrap.png?raw=true")
+local dynaIcon = render.texture("https://github.com/SimpSupreme/custom-assembly-scripts/blob/main/loaderScripts/Images/GraveDigger/Dyna.png?raw=true")
+local shellTrapIcon = render.texture("https://github.com/SimpSupreme/custom-assembly-scripts/blob/main/loaderScripts/Images/GraveDigger/ShotgunTrap.png?raw=true")
+local lightLureIcon = render.texture("https://github.com/SimpSupreme/custom-assembly-scripts/blob/main/loaderScripts/Images/GraveDigger/LanternLure.png?raw=true")
 
 local dreadHighlightToggle = ui.new_checkbox("Highlight Dreadnaught")
 local DreadRelativeColors = ui.new_checkbox("Dread Highlight Team Colors")
