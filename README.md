@@ -10,5 +10,9 @@ my collection of awfuly coded scripts for the Assembly Roblox external. if/when 
 - health counter
 - fast clicker (it's like 8 lines lmao)
 ## coming soon
+- a complete rewrite of all of the scripts, they're messy as all hell
 - Friday Night Bloxxin (maybe, idk if I can make an auto play)
 - Regretevator (it already exists but it barely works and doesn't have any floor-specific features yet)
+- Twenty One (If I can get card values)
+- Absolvement (when it comes out)
+- No Big Deal (if I can get an acc with voice chat)
