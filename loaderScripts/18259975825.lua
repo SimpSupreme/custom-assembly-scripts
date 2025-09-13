@@ -15,7 +15,7 @@ local stormIcon = render.texture("https://trello.com/1/cards/6795764e3557abdace1
 local amrIcon = render.texture("https://trello.com/1/cards/67bde4a22db7cdc2c9685050/attachments/67c350e8fb98c0fc69bd809c/download/antimaterial.png")
 local flamerIcon = render.texture("https://trello.com/1/cards/67962afd5805fbd7bfede65d/attachments/67a288f9eab80bb923e56d3c/download/flame_trooper_class_icon.png")
 local radioIcon = render.texture("https://trello.com/1/cards/67a61f889a8da348432e8b94/attachments/67b4870b3ae01f11cd592678/download/Screenshot_2025-02-08_124824.png")
-local geistIcon = render.texture("https://spaces-cdn.clipsafari.com/jcjgtlbjllekc2flgva3n29wmcpj")
+local geistIcon = render.texture("https://trello.com/1/cards/67d5b0c3ca8a93fa5f28e620/attachments/68c48ae15695d05b9c24f854/download/geist_trooper_icon.png")
 local trenchIcon = render.texture("https://trello.com/1/cards/67cc95d5d7c3e18683b56950/attachments/6825f834657f013737c868a5/download/trench_icon.png")
 local bulwarkIcon = render.texture("https://trello.com/1/cards/67d596a1a564f47a73c78910/attachments/67d5f448a29f2245710f3259/download/Untitled.png")
 
