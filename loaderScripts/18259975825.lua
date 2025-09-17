@@ -17,6 +17,7 @@ local flamerIcon = render.texture("https://trello.com/1/cards/67962afd5805fbd7bf
 local radioIcon = render.texture("https://trello.com/1/cards/67a61f889a8da348432e8b94/attachments/67b4870b3ae01f11cd592678/download/Screenshot_2025-02-08_124824.png")
 local geistIcon = render.texture("https://trello.com/1/cards/67d5b0c3ca8a93fa5f28e620/attachments/68c48ae15695d05b9c24f854/download/geist_trooper_icon.png")
 local trenchIcon = render.texture("https://trello.com/1/cards/67cc95d5d7c3e18683b56950/attachments/6825f834657f013737c868a5/download/trench_icon.png")
+--[[ Unused Icons
 local bulwarkIcon = render.texture("https://trello.com/1/cards/67d596a1a564f47a73c78910/attachments/67d5f448a29f2245710f3259/download/Untitled.png")
 local mantrapIcon = render.texture("https://raw.githubusercontent.com/SimpSupreme/custom-assembly-scripts/refs/heads/main/loaderScripts/Images/GraveDigger/BearTrap.png")
 local tinBombIcon = render.texture("https://raw.githubusercontent.com/SimpSupreme/custom-assembly-scripts/refs/heads/main/loaderScripts/Images/GraveDigger/TinBomb.png")
@@ -24,12 +25,13 @@ local gasTrapIcon = render.texture("https://raw.githubusercontent.com/SimpSuprem
 local dynaIcon = render.texture("https://raw.githubusercontent.com/SimpSupreme/custom-assembly-scripts/refs/heads/main/loaderScripts/Images/GraveDigger/Dyna.png")
 local shellTrapIcon = render.texture("https://raw.githubusercontent.com/SimpSupreme/custom-assembly-scripts/refs/heads/main/loaderScripts/Images/GraveDigger/ShotgunTrap.png")
 local lightLureIcon = render.texture("https://raw.githubusercontent.com/SimpSupreme/custom-assembly-scripts/refs/heads/main/loaderScripts/Images/GraveDigger/LanternLure.png")
+]]
 
 local dreadHighlightToggle = ui.new_checkbox("Highlight Dreadnaught")
 local DreadRelativeColors = ui.new_checkbox("Dread Highlight Team Colors")
 local dreadBossbarToggle = ui.new_checkbox("Dreadnough Boss Bar")
 local HighlightShocks = ui.new_checkbox("Highlight Shock Troopers")
-local jaegerTrapHighlightToggle = ui.new_checkbox("Highlight Jaeger Traps")
+-- local jaegerTrapHighlightToggle = ui.new_checkbox("Highlight Jaeger Traps") Unused Toggle
 local shockKitHighlightToggle = ui.new_checkbox("Highlight Shock Kits")
 local tpToShockKit1 = ui.button("Teleport to Control Kit 1")
 local tpToShockKit2 = ui.button("Teleport to Control Kit 2")
