@@ -2,10 +2,11 @@
 my collection of awfuly coded scripts for the Assembly Roblox external. if/when I use AI, I'll make it very obvious.
 
 ## supported games
-- [Pressure](https://www.roblox.com/games/12411473842/Worth-The-Wait-Pressure)
+- [Pressure](https://www.roblox.com/games/12411473842/Worth-The-Wait-Pressure) (REWRITE IN PROGRESS)
 - [Grave/Digger](https://www.roblox.com/games/18259975825/Grave-Digger)
 - [Doors](https://www.roblox.com/games/6516141723/DOORS)
 ## other scripts
+- Color Library (just a bunch of arrays withh RGB values)
 - Workspace dumper (Thanks ChatGPT for programming it and @amr in the Assembly discord for the file system script)
 - health counter
 - fast clicker (it's like 8 lines lmao)
